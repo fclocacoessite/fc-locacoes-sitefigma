@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+    --primary: 14 100% 57%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 70%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 14 100% 57%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 348 83% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 70% / 0.3;
+    --input: 0 0% 70% / 0.3;
+    --ring: 14 100% 57%;
+    --radius: 0.5rem;
+    
+    /* FC Locações Brand Colors */
+    --fc-orange: 14 100% 57%;
+    --fc-dark-gray: 0 0% 12%;
+    --fc-white: 0 0% 100%;
+    --fc-medium-gray: 0 0% 70%;
+    --fc-light-gray: 0 0% 96%;
+  }
+
+  .dark {
+    --background: 0 0% 12%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 14 100% 57%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 14 100% 57%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 348 83% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 70% / 0.2;
+    --input: 0 0% 16%;
+    --ring: 14 100% 57%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+/* Custom utilities for FC Locações */
+@layer utilities {
+  .fc-orange {
+    background-color: hsl(var(--fc-orange));
+  }
+  
+  .fc-dark-gray {
+    background-color: hsl(var(--fc-dark-gray));
+  }
+  
+  .fc-light-gray {
+    background-color: hsl(var(--fc-light-gray));
+  }
+  
+  .text-fc-orange {
+    color: hsl(var(--fc-orange));
+  }
+  
+  .text-fc-dark-gray {
+    color: hsl(var(--fc-dark-gray));
+  }
+  
+  .text-fc-medium-gray {
+    color: hsl(var(--fc-medium-gray));
+  }
+  
+  .border-fc-orange {
+    border-color: hsl(var(--fc-orange));
+  }
+  
+  .hover\:border-fc-orange:hover {
+    border-color: hsl(var(--fc-orange));
+  }
+  
+  .hover\:bg-fc-orange:hover {
+    background-color: hsl(var(--fc-orange));
+  }
+  
+  .focus\:ring-fc-orange:focus {
+    --tw-ring-color: hsl(var(--fc-orange));
+  }
+} 

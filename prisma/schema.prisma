@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(CLIENT)
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  CLIENT
+}
+
+// Perfil completo do cliente com dados de segurança
+model ClientProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique // Referência ao auth.users do Supabase
+  email                 String   @unique
+  name                  String
+  role                  UserRole  @default(CLIENT)
+  
+  // Dados pessoais obrigatórios
+  cpf                   String?  @unique // CPF para pessoa física
+  cnpj                  String?  @unique // CNPJ para pessoa jurídica
+  phone                 String
+  birthDate             DateTime?
+  
+  // Endereço completo
+  address               String
+  city                  String
+  state                 String
+  zipCode               String
+  country               String   @default("Brasil")
+  
+  // Documentos de identidade
+  rg                    String?
+  cnh                   String?
+  cnhExpiry             DateTime?
+  
+  // Comprovantes
+  proofOfResidence      String? // URL do arquivo
+  proofOfIncome         String? // URL do arquivo
+  companyDocuments      String? // URL dos documentos da empresa
+  
+  // Status de verificação
+  isVerified            Boolean  @default(false)
+  verificationDate      DateTime?
+  verifiedBy            String?
+  
+  // Dados adicionais
+  emergencyContact      String?
+  emergencyPhone        String?
+  notes                 String?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relacionamentos
+  quotes                Quote[]
+  contracts             Contract[]
+  
+  @@index([email])
+  @@index([cpf])
+  @@index([cnpj])
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  brand       String
+  model       String
+  year        Int
+  plate       String   @unique
+  category    String
+  dailyRate   Float
+  weeklyRate  Float?
+  monthlyRate Float?
+  isAvailable Boolean  @default(true)
+  imageUrl    String?
+  description String?
+  features    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamentos
+  quotes     Quote[]
+  contracts  Contract[]
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  clientId  String
+  vehicleId String
+  startDate DateTime
+  endDate   DateTime
+  totalDays Int
+  totalCost Float
+  status    QuoteStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relacionamentos
+  client    ClientProfile @relation(fields: [clientId], references: [id])
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  contract  Contract?
+}
+
+enum QuoteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Contract {
+  id        String   @id @default(cuid())
+  quoteId   String  @unique // Um contrato por orçamento
+  clientId  String
+  vehicleId String
+  startDate DateTime
+  endDate   DateTime
+  totalCost Float
+  status    ContractStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relacionamentos
+  client    ClientProfile @relation(fields: [clientId], references: [id])
+  quote     Quote @relation(fields: [quoteId], references: [id])
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+}
+
+enum ContractStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+} 
