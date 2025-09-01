@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Vehicle } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
+import { Footer } from '@/components/Footer'
 
 export default function OrcamentoPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -268,6 +269,9 @@ export default function OrcamentoPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

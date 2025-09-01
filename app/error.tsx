@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Footer } from '@/components/Footer'
 
 export default function Error({
   error,
@@ -58,6 +59,9 @@ export default function Error({
           </details>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

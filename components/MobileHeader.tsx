@@ -31,7 +31,7 @@ export function MobileHeader() {
     { name: 'Início', href: '/' },
     { name: 'Frota', href: '/frota' },
     { name: 'Orçamento', href: '/orcamento' },
-    { name: 'Contato', href: '#contato' },
+    { name: 'Contato', href: '/contato' },
   ]
 
   const getIcon = (iconName: string) => {

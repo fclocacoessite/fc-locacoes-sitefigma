@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { Footer } from '@/components/Footer'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,6 +174,9 @@ export default function SignInPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

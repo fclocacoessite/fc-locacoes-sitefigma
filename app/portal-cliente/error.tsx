@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Footer } from '@/components/Footer'
 
 export default function PortalClienteError({
   error,
@@ -45,6 +46,9 @@ export default function PortalClienteError({
           </Button>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

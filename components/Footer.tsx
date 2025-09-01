@@ -55,6 +55,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><a href="/frota" className="text-gray-300 hover:text-white transition-colors">Frota de Veículos</a></li>
               <li><a href="/orcamento" className="text-gray-300 hover:text-white transition-colors">Solicitar Orçamento</a></li>
+              <li><a href="/contato" className="text-gray-300 hover:text-white transition-colors">Entre em Contato</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Caminhões Munck</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Cestos Aéreos</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Transporte Especializado</a></li>

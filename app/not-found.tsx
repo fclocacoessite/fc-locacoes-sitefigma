@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Footer } from '@/components/Footer'
 
 export default function NotFound() {
   const handleGoBack = () => {
@@ -37,6 +38,9 @@ export default function NotFound() {
           </Link>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

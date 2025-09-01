@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Footer } from '@/components/Footer'
 
 export default function AdminError({
   error,
@@ -45,6 +46,9 @@ export default function AdminError({
           </Button>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

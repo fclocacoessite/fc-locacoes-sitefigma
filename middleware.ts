@@ -6,9 +6,13 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  // Usar variáveis de ambiente ou fallback para desenvolvimento
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gdwpvvdncdqesakkfmle.supabase.co'
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdkd3B2dmRuY2RxZXNha2tmbWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzODkyNzksImV4cCI6MjA3MDk2NTI3OX0.SBaaDe0_RxnHE0IJie1FwSgCIE2PY6hggiocEOdZBIg'
+
   const supabase = createServerClient(
-    'https://gdwpvvdncdqesakkfmle.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdkd3B2dmRuY2RxZXNha2tmbWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzODkyNzksImV4cCI6MjA3MDk2NTI3OX0.SBaaDe0_RxnHE0IJie1FwSgCIE2PY6hggiocEOdZBIg',
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

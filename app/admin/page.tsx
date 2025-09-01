@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Vehicle, Quote } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
+import { Footer } from '@/components/Footer'
 import { 
   Users, 
   Truck, 
@@ -604,6 +605,9 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }
