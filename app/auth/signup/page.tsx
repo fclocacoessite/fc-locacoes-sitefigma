@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Mail, Lock, User, Eye, EyeOff, Phone, Building, CreditCard } from 'lucide-react'
-import { Footer } from '@/components/Footer'
+ 
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -374,8 +374,7 @@ export default function SignUpPage() {
         </CardContent>
       </Card>
 
-      {/* Footer */}
-      <Footer />
+      
     </div>
   )
 }
