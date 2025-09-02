@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Quote } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
-import { Footer } from '@/components/Footer'
+ 
 import { 
   Users, 
   Truck, 
@@ -315,6 +315,9 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
+              {vehicles.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">Nenhum veículo encontrado.</div>
+              ) : (
               <ul className="divide-y divide-gray-200">
                 {vehicles.map((vehicle) => (
                   <li key={vehicle.id}>
@@ -343,6 +346,7 @@ export default function AdminPage() {
                   </li>
                 ))}
               </ul>
+              )}
             </div>
           )}
 
@@ -351,6 +355,9 @@ export default function AdminPage() {
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Orçamentos</h3>
               </div>
+              {quotes.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">Nenhum orçamento encontrado.</div>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -420,6 +427,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           )}
 
