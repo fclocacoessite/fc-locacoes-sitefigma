@@ -553,8 +553,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      
     </div>
   )
 }
