@@ -29,6 +29,7 @@ export function MobileHeader() {
 
   const navigation = [
     { name: 'Início', href: '/' },
+    { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
     { name: 'Orçamento', href: '/orcamento' },
     { name: 'Contato', href: '/contato' },

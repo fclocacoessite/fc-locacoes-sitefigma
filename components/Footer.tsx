@@ -53,6 +53,7 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Serviços</h3>
             <ul className="space-y-2">
+              <li><a href="/sobre" className="text-gray-300 hover:text-white transition-colors">Sobre Nós</a></li>
               <li><a href="/frota" className="text-gray-300 hover:text-white transition-colors">Frota de Veículos</a></li>
               <li><a href="/orcamento" className="text-gray-300 hover:text-white transition-colors">Solicitar Orçamento</a></li>
               <li><a href="/contato" className="text-gray-300 hover:text-white transition-colors">Entre em Contato</a></li>
