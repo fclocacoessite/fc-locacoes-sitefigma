@@ -11,7 +11,6 @@ import {
   Facebook,
   Instagram,
   Linkedin,
-  Youtube,
   MessageSquare
 } from 'lucide-react'
 
@@ -37,13 +36,6 @@ export default function ContatoPage() {
       url: 'https://linkedin.com/company/fclocacoes',
       color: 'bg-blue-700 hover:bg-blue-800',
       description: 'Conecte-se conosco no LinkedIn'
-    },
-    {
-      name: 'YouTube',
-      icon: Youtube,
-      url: 'https://youtube.com/@fclocacoes',
-      color: 'bg-red-600 hover:bg-red-700',
-      description: 'Assista nossos vídeos no YouTube'
     },
     {
       name: 'WhatsApp',
