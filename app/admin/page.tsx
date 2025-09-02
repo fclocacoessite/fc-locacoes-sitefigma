@@ -48,6 +48,23 @@ export default function AdminPage() {
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(false)
+  const [isCreatingVehicle, setIsCreatingVehicle] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [vehicleForm, setVehicleForm] = useState({
+    brand: '',
+    model: '',
+    year: new Date().getFullYear(),
+    plate: '',
+    category: '',
+    daily_rate: 0,
+    weekly_rate: undefined as number | undefined,
+    monthly_rate: undefined as number | undefined,
+    is_available: true,
+    image_url: '',
+    description: '',
+    features: '' // separado por vírgula
+  })
   
   // Estado para os textos do top bar
   const [topBarTexts, setTopBarTexts] = useState([
@@ -116,6 +133,68 @@ export default function AdminPage() {
   }
 
   // Login é tratado no middleware e em /admin/login
+
+  const handleVehicleFormChange = (field: string, value: any) => {
+    setVehicleForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleCreateVehicle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreating(true)
+    setCreateError('')
+    try {
+      const payload = {
+        brand: vehicleForm.brand,
+        model: vehicleForm.model,
+        year: Number(vehicleForm.year),
+        plate: vehicleForm.plate,
+        category: vehicleForm.category,
+        daily_rate: Number(vehicleForm.daily_rate),
+        weekly_rate: vehicleForm.weekly_rate ? Number(vehicleForm.weekly_rate) : null,
+        monthly_rate: vehicleForm.monthly_rate ? Number(vehicleForm.monthly_rate) : null,
+        is_available: Boolean(vehicleForm.is_available),
+        image_url: vehicleForm.image_url || null,
+        description: vehicleForm.description || null,
+        features: vehicleForm.features
+          ? vehicleForm.features.split(',').map(s => s.trim()).filter(Boolean)
+          : []
+      }
+
+      const res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || 'Erro ao criar veículo')
+      }
+
+      // Resetar formulário e fechar
+      setVehicleForm({
+        brand: '',
+        model: '',
+        year: new Date().getFullYear(),
+        plate: '',
+        category: '',
+        daily_rate: 0,
+        weekly_rate: undefined,
+        monthly_rate: undefined,
+        is_available: true,
+        image_url: '',
+        description: '',
+        features: ''
+      })
+      setIsCreatingVehicle(false)
+      // Recarregar lista
+      fetchData()
+    } catch (err: any) {
+      setCreateError(err?.message || 'Erro ao criar veículo')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
     // Em produção, faria uma chamada para a API
@@ -309,12 +388,160 @@ export default function AdminPage() {
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">Frota de Veículos</h3>
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsCreatingVehicle(v => !v)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
+                  >
                     <Plus className="h-4 w-4" />
-                    <span>Adicionar Veículo</span>
+                    <span>{isCreatingVehicle ? 'Fechar' : 'Adicionar Veículo'}</span>
                   </button>
                 </div>
               </div>
+              {isCreatingVehicle && (
+                <div className="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
+                  <form onSubmit={handleCreateVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Marca</label>
+                      <input
+                        type="text"
+                        required
+                        value={vehicleForm.brand}
+                        onChange={(e) => handleVehicleFormChange('brand', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Modelo</label>
+                      <input
+                        type="text"
+                        required
+                        value={vehicleForm.model}
+                        onChange={(e) => handleVehicleFormChange('model', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Ano</label>
+                      <input
+                        type="number"
+                        required
+                        value={vehicleForm.year}
+                        onChange={(e) => handleVehicleFormChange('year', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Placa</label>
+                      <input
+                        type="text"
+                        required
+                        value={vehicleForm.plate}
+                        onChange={(e) => handleVehicleFormChange('plate', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Categoria</label>
+                      <input
+                        type="text"
+                        required
+                        value={vehicleForm.category}
+                        onChange={(e) => handleVehicleFormChange('category', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Valor Diário (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        value={vehicleForm.daily_rate}
+                        onChange={(e) => handleVehicleFormChange('daily_rate', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Valor Semanal (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={vehicleForm.weekly_rate ?? ''}
+                        onChange={(e) => handleVehicleFormChange('weekly_rate', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Valor Mensal (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={vehicleForm.monthly_rate ?? ''}
+                        onChange={(e) => handleVehicleFormChange('monthly_rate', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Disponível</label>
+                      <select
+                        value={vehicleForm.is_available ? 'true' : 'false'}
+                        onChange={(e) => handleVehicleFormChange('is_available', e.target.value === 'true')}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      >
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Imagem (URL)</label>
+                      <input
+                        type="url"
+                        value={vehicleForm.image_url}
+                        onChange={(e) => handleVehicleFormChange('image_url', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                      <textarea
+                        rows={3}
+                        value={vehicleForm.description}
+                        onChange={(e) => handleVehicleFormChange('description', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">Características (separadas por vírgula)</label>
+                      <input
+                        type="text"
+                        value={vehicleForm.features}
+                        onChange={(e) => handleVehicleFormChange('features', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                        placeholder="Guindaste, Operador incluso, Seguro"
+                      />
+                    </div>
+                    {createError && (
+                      <div className="md:col-span-2 text-sm text-red-600">{createError}</div>
+                    )}
+                    <div className="md:col-span-2 flex items-center justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingVehicle(false)}
+                        className="px-4 py-2 border rounded-md text-sm"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={creating}
+                        className="px-4 py-2 rounded-md text-sm text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-60"
+                      >
+                        {creating ? 'Salvando...' : 'Salvar Veículo'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
               {vehicles.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">Nenhum veículo encontrado.</div>
               ) : (
