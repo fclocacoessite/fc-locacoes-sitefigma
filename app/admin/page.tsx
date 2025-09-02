@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Vehicle, Quote } from '@/lib/supabase'
+import { Quote } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
 import { Footer } from '@/components/Footer'
 import { 
@@ -25,11 +25,27 @@ import {
   MapPin
 } from 'lucide-react'
 
+type AdminVehicle = {
+  id: string
+  brand: string
+  model: string
+  year: number
+  plate: string
+  category: string
+  daily_rate: number
+  weekly_rate?: number | null
+  monthly_rate?: number | null
+  is_available: boolean
+  image_url?: string | null
+  description?: string | null
+  features?: string[] | null
+  created_at?: string
+  updated_at?: string
+}
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [vehicles, setVehicles] = useState<AdminVehicle[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(false)
   
@@ -45,10 +61,8 @@ export default function AdminPage() {
   const [editingData, setEditingData] = useState({ text: '', label: '' })
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchData()
-    }
-  }, [isLoggedIn])
+    fetchData()
+  }, [])
 
   const fetchData = async () => {
     setLoading(true)
@@ -58,8 +72,8 @@ export default function AdminPage() {
         fetch('/api/quotes')
       ])
       
-      const vehiclesData = await vehiclesRes.json()
-      setVehicles(vehiclesData || [])
+      const vehiclesJson = await vehiclesRes.json()
+      setVehicles(vehiclesJson?.vehicles || [])
       
       // Mock quotes data - em produção viria da API
       setQuotes([
@@ -101,15 +115,7 @@ export default function AdminPage() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Simulação de login admin - em produção usaria Supabase Auth
-    if (loginData.email === 'admin@fclocacoes.com' && loginData.password === 'admin123') {
-      setIsLoggedIn(true)
-    } else {
-      alert('Credenciais inválidas')
-    }
-  }
+  // Login é tratado no middleware e em /admin/login
 
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
     // Em produção, faria uma chamada para a API
@@ -185,74 +191,7 @@ export default function AdminPage() {
     }
   }
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <div className="mx-auto h-12 w-12 bg-orange-500 rounded-lg flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
-            </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Painel Administrativo
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              FC Locações - Sistema de Gestão
-            </p>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-            <div className="rounded-md shadow-sm -space-y-px">
-              <div>
-                <label htmlFor="email" className="sr-only">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                  placeholder="Email"
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">Senha</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                  placeholder="Senha"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                Entrar
-              </button>
-            </div>
-          </form>
-          
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              <strong>Credenciais de teste:</strong><br />
-              Email: admin@fclocacoes.com<br />
-              Senha: admin123
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Render direto: acesso já protegido pelo middleware
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -391,11 +330,11 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
-                            {getStatusText(vehicle.status)}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${vehicle.is_available ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {vehicle.is_available ? 'Disponível' : 'Indisponível'}
                           </span>
                           <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">R$ {vehicle.daily_rate?.toFixed(2)}/dia</div>
+                            <div className="text-sm font-medium text-gray-900">R$ {Number(vehicle.daily_rate).toFixed(2)}/dia</div>
                             <div className="text-sm text-gray-500">{vehicle.category}</div>
                           </div>
                         </div>
