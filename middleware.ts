@@ -42,15 +42,21 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Rotas admin - apenas admin e manager
+  // Rotas admin - liberar /admin/login e exigir admin/manager no restante
   if (pathname.startsWith('/admin')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    // Página pública de login do admin
+    if (pathname.startsWith('/admin/login')) {
+      return response
     }
-    
+
+    // Demais rotas admin exigem sessão
+    if (!session) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
     const userRole = session.user.user_metadata?.role || 'client'
     if (userRole !== 'admin' && userRole !== 'manager') {
-      return NextResponse.redirect(new URL('/portal-cliente', request.url))
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
 
