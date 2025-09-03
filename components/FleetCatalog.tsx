@@ -17,7 +17,7 @@ export function FleetCatalog() {
       id: '1',
       name: 'Munck 8 Toneladas',
       category: 'Caminhão Munck',
-      image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17.jpeg',
       specs: { capacity: '8 toneladas', reach: '12 metros', year: '2021' },
       available: true,
       price: 'R$ 650/dia'
@@ -26,7 +26,7 @@ export function FleetCatalog() {
       id: '2',
       name: 'Munck 12 Toneladas',
       category: 'Caminhão Munck',
-      image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (1).jpeg',
       specs: { capacity: '12 toneladas', reach: '15 metros', year: '2022' },
       available: true,
       price: 'R$ 800/dia'
@@ -35,7 +35,7 @@ export function FleetCatalog() {
       id: '3',
       name: 'Cesto Aéreo 15m',
       category: 'Cesto Aéreo',
-      image: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.43.jpeg',
       specs: { capacity: '200 kg', height: '15 metros', year: '2020' },
       available: false,
       price: 'R$ 500/dia'
@@ -44,7 +44,7 @@ export function FleetCatalog() {
       id: '4',
       name: 'Cesto Aéreo 20m',
       category: 'Cesto Aéreo',
-      image: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35.jpeg',
       specs: { capacity: '200 kg', height: '20 metros', year: '2023' },
       available: true,
       price: 'R$ 650/dia'
@@ -53,7 +53,7 @@ export function FleetCatalog() {
       id: '5',
       name: 'Caminhão 3/4 Baú',
       category: 'Transporte',
-      image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
       specs: { capacity: '3,5 toneladas', year: '2021' },
       available: true,
       price: 'R$ 350/dia'
@@ -62,7 +62,7 @@ export function FleetCatalog() {
       id: '6',
       name: 'Munck 25 Toneladas',
       category: 'Caminhão Munck',
-      image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      image: '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.18.jpeg',
       specs: { capacity: '25 toneladas', reach: '22 metros', year: '2023' },
       available: true,
       price: 'R$ 1.200/dia'

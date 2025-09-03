@@ -26,6 +26,7 @@ export interface Vehicle {
   id: string
   category: string
   model: string
+  description?: string
   capacity_ton?: number
   height_m?: number
   cabine_suplementar: boolean
@@ -33,6 +34,7 @@ export interface Vehicle {
   banheiro: boolean
   photos: string[]
   documents: string[]
+  features?: string[]
   status: string
   featured: boolean
   created_at: string

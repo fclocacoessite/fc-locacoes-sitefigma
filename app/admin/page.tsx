@@ -68,7 +68,7 @@ export default function AdminPage() {
   
   // Estado para os textos do top bar
   const [topBarTexts, setTopBarTexts] = useState([
-    { id: 1, icon: 'phone', text: '(11) 9999-9999', label: 'Telefone', active: true },
+    { id: 1, icon: 'phone', text: '(21) 99215-4030', label: 'Telefone', active: true },
     { id: 2, icon: 'mail', text: 'contato@fclocacoes.com.br', label: 'Email', active: true },
     { id: 3, icon: 'clock', text: 'Atendimento 24h', label: 'Horário', active: true },
     { id: 4, icon: 'map-pin', text: 'Grande São Paulo', label: 'Região', active: true },

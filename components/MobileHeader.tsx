@@ -11,7 +11,7 @@ export function MobileHeader() {
 
   // Informações rotativas para o top bar
   const topBarInfo = [
-    { icon: 'phone', text: '(11) 9999-9999', label: 'Telefone' },
+    { icon: 'phone', text: '(21) 99215-4030', label: 'Telefone' },
     { icon: 'mail', text: 'contato@fclocacoes.com.br', label: 'Email' },
     { icon: 'clock', text: 'Atendimento 24h', label: 'Horário' },
     { icon: 'map-pin', text: 'Grande São Paulo', label: 'Região' },
@@ -131,12 +131,12 @@ export function MobileHeader() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex-shrink-0 flex items-center space-x-2">
-              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-              </div>
+            <a href="/" className="flex-shrink-0 flex items-center space-x-3">
+              <img 
+                src="/logo-fc.jpg" 
+                alt="FC Locações" 
+                className="w-12 h-12 object-cover rounded-lg"
+              />
               <div className="text-gray-800">
                 <div className="font-bold text-xl">FC Locações</div>
                 <div className="text-xs text-gray-600">Caminhões Munck & Cestos Aéreos</div>

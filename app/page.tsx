@@ -393,7 +393,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold mb-2">Telefone</h3>
-              <p className="text-gray-600">(11) 9999-9999</p>
+              <p className="text-gray-600">(21) 99215-4030</p>
               <p className="text-sm text-gray-500">24h por dia</p>
             </div>
             
@@ -448,12 +448,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                  </svg>
-                </div>
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="/logo-fc.jpg" 
+                  alt="FC Locações" 
+                  className="w-8 h-8 object-cover rounded-lg"
+                />
                 <span className="font-bold text-lg">FC Locações</span>
               </div>
               <p className="text-gray-400 text-sm">
@@ -474,9 +474,9 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-4">Contato</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li>(11) 9999-9999</li>
+                <li>(21) 99215-4030</li>
                 <li>contato@fclocacoes.com.br</li>
-                <li>São Paulo, SP</li>
+                <li>Nova Iguaçu, RJ</li>
               </ul>
             </div>
             

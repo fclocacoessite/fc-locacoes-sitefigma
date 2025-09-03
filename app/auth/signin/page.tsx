@@ -16,6 +16,9 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// Forçar render dinâmico para evitar pré-renderização
+export const dynamic = 'force-dynamic'
+
 export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -66,10 +69,12 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="max-w-md w-full">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">FC</span>
-            </div>
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <img 
+              src="/logo-fc.jpg" 
+              alt="FC Locações" 
+              className="w-12 h-12 object-cover rounded-lg"
+            />
             <div>
               <h1 className="text-xl font-bold text-gray-900">FC Locações</h1>
               <p className="text-sm text-gray-500">Portal de Acesso</p>

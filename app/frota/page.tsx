@@ -5,31 +5,174 @@ import { Vehicle } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
 import { Footer } from '@/components/Footer'
 
+// Array de veículos com imagens locais e descrições detalhadas
+const localVehicles = [
+  {
+    id: '1',
+    model: 'Munck 8 Toneladas',
+    category: 'Caminhão Munck',
+    description: 'Caminhão munck com capacidade de 8 toneladas, ideal para transportes de carga pesada e equipamentos.',
+    photos: [
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17.jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (1).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (2).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (3).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (4).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.35.17.jpeg'
+    ],
+    capacity_ton: 8,
+    height_m: 12,
+    status: 'available',
+    featured: true,
+    cabine_suplementar: true,
+    carroceria_aberta: true,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Cabine suplementar para 8 passageiros', 'Carroceria aberta metálica', 'Ideal para equipes de trabalho'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  },
+  {
+    id: '2',
+    model: 'Munck 12 Toneladas',
+    category: 'Caminhão Munck',
+    description: 'Caminhão munck de 12 toneladas com cabine suplementar, perfeito para transportes de maior capacidade.',
+    photos: [
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (1).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17.jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (2).jpeg'
+    ],
+    capacity_ton: 12,
+    height_m: 15,
+    status: 'available',
+    featured: false,
+    cabine_suplementar: true,
+    carroceria_aberta: true,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Cabine suplementar', 'Carroceria aberta', 'Alta capacidade de carga'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  },
+  {
+    id: '3',
+    model: 'Cesto Aéreo 10 Metros',
+    category: 'Cesto Aéreo',
+    description: 'Cesto aéreo simples de 10 metros com malões, ideal para trabalhos em altura e manutenção.',
+    photos: [
+      '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.43.jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.43 (1).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.43 (2).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.42.jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.42 (2).jpeg'
+    ],
+    capacity_ton: 0.2,
+    height_m: 10,
+    status: 'rented',
+    featured: false,
+    cabine_suplementar: false,
+    carroceria_aberta: false,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Alcance de 10 metros', 'Malões para ferramentas', 'Ideal para manutenção'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  },
+  {
+    id: '4',
+    model: 'Cesto Aéreo 13 Metros Duplo',
+    category: 'Cesto Aéreo',
+    description: 'Cesto aéreo duplo de 13 metros com linha viva, malões e cabine suplementar para equipes.',
+    photos: [
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35.jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35 (1).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35 (2).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35 (3).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35 (4).jpeg',
+      '/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35 (5).jpeg'
+    ],
+    capacity_ton: 0.2,
+    height_m: 13,
+    status: 'available',
+    featured: true,
+    cabine_suplementar: true,
+    carroceria_aberta: false,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Alcance de 13 metros', 'Linha viva', 'Cabine suplementar', 'Malões para ferramentas'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  },
+  {
+    id: '5',
+    model: 'Caminhão 3/4 Baú',
+    category: 'Caminhão 3/4',
+    description: 'Caminhão 3/4 com baú fechado, ideal para transportes de mercadorias e cargas sensíveis.',
+    photos: [
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (1).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (2).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (3).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (4).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (5).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (6).jpeg',
+      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (7).jpeg'
+    ],
+    capacity_ton: 3.5,
+    height_m: undefined,
+    status: 'available',
+    featured: false,
+    cabine_suplementar: false,
+    carroceria_aberta: false,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Baú fechado', 'Ideal para cargas sensíveis', 'Versátil para diversos tipos de transporte'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  },
+  {
+    id: '6',
+    model: 'Munck 25 Toneladas',
+    category: 'Caminhão Munck',
+    description: 'Caminhão munck de alta capacidade com 25 toneladas, cabine suplementar e carroceria aberta.',
+    photos: [
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.18.jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17.jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17 (1).jpeg'
+    ],
+    capacity_ton: 25,
+    height_m: 22,
+    status: 'available',
+    featured: true,
+    cabine_suplementar: true,
+    carroceria_aberta: true,
+    banheiro: false,
+    documents: ['CRLV', 'Documentação em dia'],
+    features: ['Alta capacidade de 25 toneladas', 'Cabine suplementar', 'Carroceria aberta metálica', 'Ideal para grandes cargas'],
+    created_at: '2025-09-03T00:00:00Z',
+    updated_at: '2025-09-03T00:00:00Z'
+  }
+]
+
 export default function FrotaPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   useEffect(() => {
-    fetchVehicles()
+    // Usar veículos locais em vez de fazer fetch da API
+    setVehicles(localVehicles)
+    setLoading(false)
   }, [])
-
-  const fetchVehicles = async () => {
-    try {
-      const response = await fetch('/api/vehicles')
-      const data = await response.json()
-      setVehicles(data.vehicles || [])
-    } catch (error) {
-      console.error('Erro ao carregar veículos:', error)
-      setVehicles([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredVehicles = vehicles.filter(vehicle => {
     if (filter === 'all') return true
-    return vehicle.category.toLowerCase().includes(filter.toLowerCase())
+    if (filter === 'munck') return vehicle.category.toLowerCase().includes('munck')
+    if (filter === 'cesto') return vehicle.category.toLowerCase().includes('cesto')
+    if (filter === 'caminhão') return vehicle.category.toLowerCase().includes('3/4')
+    return true
   })
 
   const categories = [
@@ -38,6 +181,22 @@ export default function FrotaPage() {
     { key: 'cesto', label: 'Cestos Aéreos' },
     { key: 'caminhão', label: 'Caminhões 3/4' },
   ]
+
+  const nextImage = () => {
+    if (selectedVehicle) {
+      setCurrentImageIndex((prev) => 
+        prev === selectedVehicle.photos.length - 1 ? 0 : prev + 1
+      )
+    }
+  }
+
+  const prevImage = () => {
+    if (selectedVehicle) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? selectedVehicle.photos.length - 1 : prev - 1
+      )
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,7 +248,11 @@ export default function FrotaPage() {
                   <img
                     src={vehicle.photos?.[0] || 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={`${vehicle.category} ${vehicle.model}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => {
+                      setSelectedVehicle(vehicle)
+                      setCurrentImageIndex(0)
+                    }}
                   />
                   <div className="absolute top-4 right-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -107,6 +270,13 @@ export default function FrotaPage() {
                       </span>
                     </div>
                   )}
+                  {vehicle.photos && vehicle.photos.length > 1 && (
+                    <div className="absolute bottom-2 right-2">
+                      <span className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                        {vehicle.photos.length} fotos
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="p-6">
@@ -118,6 +288,11 @@ export default function FrotaPage() {
                   
                   <p className="text-orange-600 font-medium text-sm mb-3">
                     {vehicle.category}
+                  </p>
+
+                  {/* Descrição */}
+                  <p className="text-gray-600 text-sm mb-4">
+                    {vehicle.description}
                   </p>
                   
                   {/* Especificações */}
@@ -139,26 +314,11 @@ export default function FrotaPage() {
                   {/* Features */}
                   <div className="mb-4">
                     <div className="flex flex-wrap gap-2">
-                      {vehicle.cabine_suplementar && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                          Cabine Suplementar
+                      {vehicle.features?.map((feature, index) => (
+                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          {feature}
                         </span>
-                      )}
-                      {vehicle.carroceria_aberta && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                          Carroceria Aberta
-                        </span>
-                      )}
-                      {vehicle.banheiro && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
-                          Banheiro
-                        </span>
-                      )}
-                      {vehicle.documents && vehicle.documents.length > 0 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {vehicle.documents.join(', ')}
-                        </span>
-                      )}
+                      ))}
                     </div>
                   </div>
                   
@@ -189,6 +349,75 @@ export default function FrotaPage() {
         )}
       </div>
 
+      {/* Modal de Visualização de Imagens */}
+      {selectedVehicle && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                {selectedVehicle.model} - {selectedVehicle.category}
+              </h3>
+              <button
+                onClick={() => setSelectedVehicle(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="relative p-4">
+              <img
+                src={selectedVehicle.photos[currentImageIndex]}
+                alt={`${selectedVehicle.model} - Imagem ${currentImageIndex + 1}`}
+                className="w-full h-96 object-contain rounded"
+              />
+              
+              {selectedVehicle.photos.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full shadow-lg"
+                  >
+                    →
+                  </button>
+                  
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {selectedVehicle.photos.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-3 h-3 rounded-full ${
+                          index === currentImageIndex ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="p-4 border-t">
+              <p className="text-gray-600 text-sm mb-3">
+                {selectedVehicle.description}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedVehicle.features?.map((feature, index) => (
+                  <span key={index} className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded">
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CTA Section */}
       <div className="bg-orange-500 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -200,10 +429,10 @@ export default function FrotaPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="tel:+5511999999999"
+              href="tel:+5521992154030"
               className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-medium transition-colors"
             >
-              (11) 9999-9999
+              (21) 99215-4030
             </a>
             <a
               href="mailto:contato@fclocacoes.com.br"

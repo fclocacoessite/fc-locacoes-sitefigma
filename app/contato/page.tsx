@@ -26,7 +26,7 @@ export default function ContatoPage() {
     {
       name: 'Instagram',
       icon: Instagram,
-      url: 'https://instagram.com/fclocacoes',
+      url: 'https://www.instagram.com/fclocacoesltda?igsh=MXc0Njg1ZGZnZmJyeQ%3D%3D&utm_source=qr',
       color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
       description: 'Veja nossas fotos no Instagram'
     },
@@ -40,7 +40,7 @@ export default function ContatoPage() {
     {
       name: 'WhatsApp',
       icon: MessageSquare,
-      url: 'https://wa.me/5511999999999',
+      url: 'https://wa.me/5521992154030',
       color: 'bg-green-600 hover:bg-green-700',
       description: 'Fale conosco pelo WhatsApp'
     }
@@ -50,32 +50,40 @@ export default function ContatoPage() {
     {
       icon: Phone,
       title: 'Telefone',
-      value: '(11) 9999-9999',
+      value: '(21) 99215-4030',
       subtitle: 'Atendimento 24h',
-      action: 'tel:+5511999999999',
+      action: 'tel:+5521992154030',
       actionText: 'Ligar Agora'
     },
     {
       icon: Mail,
-      title: 'E-mail',
-      value: 'contato@fclocacoes.com.br',
-      subtitle: 'Resposta em até 2h',
-      action: 'mailto:contato@fclocacoes.com.br',
+      title: 'E-mail - Comercial',
+      value: 'comercial@fclocacoes.com.br',
+      subtitle: 'Para assuntos comerciais. (Propostas, cotações, contratos)',
+      action: 'mailto:comercial@fclocacoes.com.br',
+      actionText: 'Enviar E-mail'
+    },
+    {
+      icon: Mail,
+      title: 'E-mail - Suporte',
+      value: 'suporte@fclocacoes.com.br',
+      subtitle: 'Para assuntos relacionados a manutenção e frota',
+      action: 'mailto:suporte@fclocacoes.com.br',
       actionText: 'Enviar E-mail'
     },
     {
       icon: MapPin,
       title: 'Endereço',
-      value: 'Rua das Locações, 123',
-      subtitle: 'Vila Industrial - São Paulo, SP',
-      action: 'https://maps.google.com/?q=Rua+das+Locações,+123,+São+Paulo,+SP',
+      value: 'Tv. dos Teixeiras, 84',
+      subtitle: 'Rodilândia, Nova Iguaçu - RJ, 26083-180, Brasil',
+      action: 'https://maps.google.com/?q=Tv.+dos+Teixeiras,+84,+Rodilândia,+Nova+Iguaçu+-+RJ,+26083-180,+Brasil',
       actionText: 'Ver no Mapa'
     },
     {
       icon: Clock,
       title: 'Horário de Funcionamento',
-      value: 'Segunda a Sexta: 7h às 18h',
-      subtitle: 'Sábado: 8h às 12h | Emergência: 24h',
+      value: 'Segunda a Sexta: 8h às 18h',
+      subtitle: 'Emergência: 24h',
       action: null,
       actionText: null
     }
@@ -182,13 +190,13 @@ export default function ContatoPage() {
               <div className="p-6">
                 <h3 className="font-semibold text-gray-900 mb-2">FC Locações</h3>
                 <p className="text-gray-600 text-sm">
-                  Rua das Locações, 123<br />
-                  Vila Industrial - São Paulo, SP<br />
-                  CEP: 01234-567
+                  Tv. dos Teixeiras, 84<br />
+                  Rodilândia, Nova Iguaçu - RJ<br />
+                  CEP: 26083-180
                 </p>
                 <div className="mt-4">
                   <a
-                    href="https://maps.google.com/?q=Rua+das+Locações,+123,+São+Paulo,+SP"
+                    href="https://maps.google.com/?q=Tv.+dos+Teixeiras,+84,+Rodilândia,+Nova+Iguaçu+-+RJ,+26083-180,+Brasil"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium"
@@ -307,7 +315,7 @@ export default function ContatoPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="tel:+5511999999999"
+              href="tel:+5521992154030"
               className="inline-flex items-center px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors"
             >
               <Phone className="w-5 h-5 mr-2" />
