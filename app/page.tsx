@@ -28,7 +28,7 @@ export default function Home() {
 
               {/* Subtitle */}
               <p className="text-xl text-gray-300 mb-8 max-w-xl">
-                Soluções completas em içamento e transporte para sua obra. Frota moderna, operadores qualificados e atendimento em toda Grande São Paulo.
+                Soluções completas em içamento e transporte para sua obra. Frota moderna, operadores qualificados e atendimento em toda região de Nova Iguaçu.
               </p>
 
               {/* CTA Buttons */}
@@ -112,26 +112,26 @@ export default function Home() {
           {/* Vehicle Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {/* Vehicle 1 */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border flex flex-col h-full">
               <img 
-                src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Munck 12 Toneladas"
+                src="/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.37.17.jpeg"
+                alt="Caminhão com Cabine Suplementar de 8 Passageiros"
                 className="w-full h-48 object-cover"
               />
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-800">Munck 12 Toneladas</h3>
+                  <h3 className="font-semibold text-gray-800">Caminhão com Cabine Suplementar</h3>
                   <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Disponível</span>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Caminhão Munck</p>
-                <div className="space-y-1 text-sm text-gray-600 mb-4">
-                  <div>Capacidade: 12 toneladas</div>
-                  <div>Alcance: 15 metros</div>
-                  <div>Ano: 2022</div>
+                <p className="text-gray-600 text-sm mb-4">Transporte de Passageiros</p>
+                <div className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
+                  <div>Capacidade: 8 passageiros</div>
+                  <div>Carroceria: Aberta metálica</div>
+                  <div>Ano: 2023</div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-orange-500">R$ 800/dia</span>
-                  <a href="/orcamento" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm">
+                <div className="flex justify-between items-center mt-auto">
+                  <span className="text-lg font-bold text-orange-500">R$ 450/dia</span>
+                  <a href="/orcamento" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm min-h-[36px] flex items-center justify-center">
                     Solicitar
                   </a>
                 </div>
@@ -139,26 +139,26 @@ export default function Home() {
             </div>
 
             {/* Vehicle 2 */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border flex flex-col h-full">
               <img 
-                src="https://images.unsplash.com/photo-1580674285054-bed31e145f59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Cesto Aéreo 20m"
+                src="/img/VEÍCULO 34 CESTO AÉREO SIMPLES 10 METROS (LINHA MORTA )COM MALÕES E SEM CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.45.43.jpeg"
+                alt="Cesto Aéreo Simples 10 metros"
                 className="w-full h-48 object-cover"
               />
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-800">Cesto Aéreo 20m</h3>
+                  <h3 className="font-semibold text-gray-800">Cesto Aéreo Simples 10m</h3>
                   <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Disponível</span>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Cesto Aéreo</p>
-                <div className="space-y-1 text-sm text-gray-600 mb-4">
-                  <div>Capacidade: 200 kg</div>
-                  <div>Altura: 20 metros</div>
+                <p className="text-gray-600 text-sm mb-4">Cesto Aéreo - Linha Morta</p>
+                <div className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
+                  <div>Altura: 10 metros</div>
+                  <div>Equipado com malões</div>
                   <div>Ano: 2023</div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-orange-500">R$ 650/dia</span>
-                  <a href="/orcamento" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm">
+                <div className="flex justify-between items-center mt-auto">
+                  <span className="text-lg font-bold text-orange-500">R$ 550/dia</span>
+                  <a href="/orcamento" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm min-h-[36px] flex items-center justify-center">
                     Solicitar
                   </a>
                 </div>
@@ -166,26 +166,26 @@ export default function Home() {
             </div>
 
             {/* Vehicle 3 */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border flex flex-col h-full">
               <img 
-                src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Caminhão 3/4"
+                src="/img/VEÍCULO 34 CESTO AÉREO DUPLO 13 METROS (LINHA VIVA) COM MALÕES E CABINE SUPLEMENTAR/WhatsApp Image 2025-09-03 at 11.47.35.jpeg"
+                alt="Cesto Aéreo Duplo 13 metros"
                 className="w-full h-48 object-cover"
               />
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-800">Caminhão 3/4</h3>
-                  <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Locado</span>
+                  <h3 className="font-semibold text-gray-800">Cesto Aéreo Duplo 13m</h3>
+                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Disponível</span>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Transporte</p>
-                <div className="space-y-1 text-sm text-gray-600 mb-4">
-                  <div>Capacidade: 3,5 toneladas</div>
+                <p className="text-gray-600 text-sm mb-4">Cesto Aéreo - Linha Viva</p>
+                <div className="space-y-1 text-sm text-gray-600 mb-4 flex-grow">
+                  <div>Altura: 13 metros</div>
                   <div>Ano: 2021</div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-500">R$ 350/dia</span>
-                  <button className="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm" disabled>
-                    Indisponível
+                <div className="flex justify-between items-center mt-auto">
+                  <span className="text-lg font-bold text-orange-500">R$ 750/dia</span>
+                  <button className="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm min-h-[36px] flex items-center justify-center" disabled>
+                    Solicitar
                   </button>
                 </div>
               </div>
@@ -199,8 +199,8 @@ export default function Home() {
             </h3>
             <div className="flex flex-wrap justify-center gap-3">
               {[
-                'São Paulo', 'ABC Paulista', 'Guarulhos', 'Osasco', 'Barueri',
-                'Alphaville', 'Cotia', 'Itapecerica', 'Taboão da Serra', 'Embu'
+                'Nova Iguaçu', 'Duque de Caxias', 'São João de Meriti', 'Belford Roxo', 'Queimados',
+                'Japeri', 'Seropédica', 'Itaguaí', 'Rio de Janeiro', 'Baixada Fluminense'
               ].map((area) => (
                 <span
                   key={area}
@@ -417,7 +417,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Localização</h3>
               <p className="text-gray-600">São Paulo, SP</p>
-              <p className="text-sm text-gray-500">Grande São Paulo</p>
+              <p className="text-sm text-gray-500">Nova Iguaçu</p>
             </div>
             
             <div className="text-center">
@@ -442,6 +442,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-12">

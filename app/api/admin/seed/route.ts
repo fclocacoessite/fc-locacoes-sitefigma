@@ -1,45 +1,91 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const url = new URL(request.url)
-    const token = url.searchParams.get('token')
-    const expected = process.env.ADMIN_SEED_TOKEN
+    console.log('Iniciando criação de usuário admin...')
 
-    if (!expected) {
-      return NextResponse.json({ error: 'ADMIN_SEED_TOKEN não configurado no servidor' }, { status: 500 })
-    }
-    if (token !== expected) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const body = await request.json().catch(() => ({}))
-    const { email, password, name, role } = body as { email?: string; password?: string; name?: string; role?: 'admin' | 'manager' }
-
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email e senha são obrigatórios' }, { status: 400 })
-    }
-
-    const createResult = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
+    // Dados do admin padrão
+    const adminData = {
+      email: 'admin@fclocacoes.com.br',
+      password: 'admin123456',
       user_metadata: {
-        name: name || 'Administrador',
-        role: role || 'admin',
-      },
+        name: 'Administrador FC Locações',
+        role: 'admin',
+        phone: '(21) 99215-4030',
+        company: 'FC Locações'
+      }
+    }
+
+    // Criar usuário admin
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: adminData.email,
+      password: adminData.password,
+      user_metadata: adminData.user_metadata,
+      email_confirm: true // Confirmar email automaticamente
     })
 
-    if (createResult.error) {
-      return NextResponse.json({ error: createResult.error.message }, { status: 400 })
+    if (error) {
+      console.error('Erro ao criar usuário admin:', error)
+      return NextResponse.json({ 
+        success: false, 
+        error: error.message 
+      }, { status: 400 })
     }
 
-    const user = createResult.data.user
-    return NextResponse.json({ id: user?.id, email: user?.email, role: user?.user_metadata?.role }, { status: 201 })
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Erro inesperado', details: String(err?.message || err) }, { status: 500 })
+    console.log('Usuário admin criado com sucesso:', data.user?.email)
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Usuário admin criado com sucesso',
+      user: {
+        email: data.user?.email,
+        id: data.user?.id
+      }
+    })
+
+  } catch (error) {
+    console.error('Erro inesperado:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Erro interno do servidor' 
+    }, { status: 500 })
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    // Verificar se já existe um usuário admin
+    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers()
 
+    if (error) {
+      console.error('Erro ao listar usuários:', error)
+      return NextResponse.json({ 
+        success: false, 
+        error: error.message 
+      }, { status: 400 })
+    }
+
+    const adminUsers = users.users.filter(user => 
+      user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager'
+    )
+
+    return NextResponse.json({ 
+      success: true, 
+      hasAdmin: adminUsers.length > 0,
+      adminCount: adminUsers.length,
+      admins: adminUsers.map(user => ({
+        email: user.email,
+        role: user.user_metadata?.role,
+        created_at: user.created_at
+      }))
+    })
+
+  } catch (error) {
+    console.error('Erro inesperado:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Erro interno do servidor' 
+    }, { status: 500 })
+  }
+}

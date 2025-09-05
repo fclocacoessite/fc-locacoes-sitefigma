@@ -64,10 +64,8 @@ export function SiteSettings() {
 
   // Social media settings
   const [socialSettings, setSocialSettings] = useState({
-    facebook: '',
     instagram: '',
-    linkedin: '',
-    whatsapp: '11999999999',
+    whatsapp: '21992154030',
     youtube: '',
     website: 'www.fclocacoes.com.br'
   });
@@ -613,32 +611,12 @@ export function SiteSettings() {
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="facebook">Facebook</Label>
-              <Input
-                id="facebook"
-                placeholder="https://facebook.com/fclocacoes"
-                value={socialSettings.facebook}
-                onChange={(e) => setSocialSettings(prev => ({ ...prev, facebook: e.target.value }))}
-              />
-            </div>
-            
-            <div>
               <Label htmlFor="instagram">Instagram</Label>
               <Input
                 id="instagram"
                 placeholder="https://instagram.com/fclocacoes"
                 value={socialSettings.instagram}
                 onChange={(e) => setSocialSettings(prev => ({ ...prev, instagram: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="linkedin">LinkedIn</Label>
-              <Input
-                id="linkedin"
-                placeholder="https://linkedin.com/company/fclocacoes"
-                value={socialSettings.linkedin}
-                onChange={(e) => setSocialSettings(prev => ({ ...prev, linkedin: e.target.value }))}
               />
             </div>
 
@@ -656,7 +634,7 @@ export function SiteSettings() {
               <Label htmlFor="whatsapp">WhatsApp</Label>
               <Input
                 id="whatsapp"
-                placeholder="11999999999"
+                placeholder="21992154030"
                 value={socialSettings.whatsapp}
                 onChange={(e) => setSocialSettings(prev => ({ ...prev, whatsapp: e.target.value }))}
               />

@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: vehicles, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const adminView = searchParams.get('admin') === 'true'
+    
+    let query = supabase
       .from('vehicles')
       .select('*')
-      .eq('is_available', true)
       .order('created_at', { ascending: false })
+
+    // Se não for visualização admin, mostrar apenas veículos disponíveis
+    if (!adminView) {
+      query = query.eq('is_available', true)
+    }
+
+    const { data: vehicles, error } = await query
 
     if (error) {
       console.error('Erro ao buscar veículos:', error)

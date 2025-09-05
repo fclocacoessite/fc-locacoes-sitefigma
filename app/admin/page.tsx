@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Quote } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { Quote, supabase } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
  
 import { 
@@ -39,18 +40,68 @@ type AdminVehicle = {
   image_url?: string | null
   description?: string | null
   features?: string[] | null
+  photos?: string[]
+  // Novos campos para compatibilidade com o site público
+  capacity_ton?: number | null
+  height_m?: number | null
+  cabine_suplementar?: boolean | null
+  carroceria_aberta?: boolean | null
+  banheiro?: boolean | null
+  documents?: string[] | null
+  status?: string | null
+  featured?: boolean | null
   created_at?: string
   updated_at?: string
 }
 
+type VehicleImage = {
+  id: string
+  image_type: string
+  image_name: string
+  image_size: number
+  is_primary: boolean
+  created_at: string
+  dataUrl?: string // Para armazenamento temporário
+}
+
 export default function AdminPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [isCreatingVehicle, setIsCreatingVehicle] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  
+  // Estados para edição de veículos
+  const [editingVehicle, setEditingVehicle] = useState<AdminVehicle | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    brand: '',
+    model: '',
+    year: new Date().getFullYear(),
+    plate: '',
+    category: '',
+    daily_rate: 0,
+    weekly_rate: undefined as number | undefined,
+    monthly_rate: undefined as number | undefined,
+    is_available: true,
+    description: '',
+    features: '',
+    // Novos campos para compatibilidade com o site público
+    capacity_ton: undefined as number | undefined,
+    height_m: undefined as number | undefined,
+    cabine_suplementar: false,
+    carroceria_aberta: false,
+    banheiro: false,
+    documents: '',
+    status: 'available',
+    featured: false
+  })
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [vehiclePhotos, setVehiclePhotos] = useState<VehicleImage[]>([])
   const [vehicleForm, setVehicleForm] = useState({
     brand: '',
     model: '',
@@ -63,29 +114,67 @@ export default function AdminPage() {
     is_available: true,
     image_url: '',
     description: '',
-    features: '' // separado por vírgula
+    features: '', // separado por vírgula
+    // Novos campos para compatibilidade com o site público
+    capacity_ton: undefined as number | undefined,
+    height_m: undefined as number | undefined,
+    cabine_suplementar: false,
+    carroceria_aberta: false,
+    banheiro: false,
+    documents: '',
+    status: 'available',
+    featured: false
   })
   
   // Estado para os textos do top bar
   const [topBarTexts, setTopBarTexts] = useState([
     { id: 1, icon: 'phone', text: '(21) 99215-4030', label: 'Telefone', active: true },
-    { id: 2, icon: 'mail', text: 'contato@fclocacoes.com.br', label: 'Email', active: true },
+    { id: 2, icon: 'mail', text: 'suporte@fclocacoes.com.br', label: 'Email', active: true },
     { id: 3, icon: 'clock', text: 'Atendimento 24h', label: 'Horário', active: true },
-    { id: 4, icon: 'map-pin', text: 'Grande São Paulo', label: 'Região', active: true },
+    { id: 4, icon: 'map-pin', text: 'Nova Iguaçu', label: 'Região', active: true },
     { id: 5, icon: 'truck', text: 'Frota Própria', label: 'Serviço', active: true }
   ])
   const [editingText, setEditingText] = useState<number | null>(null)
   const [editingData, setEditingData] = useState({ text: '', label: '' })
 
+  // Verificar autenticação
   useEffect(() => {
-    fetchData()
-  }, [])
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          router.replace('/admin/login')
+          return
+        }
+        
+        const userRole = session.user.user_metadata?.role || 'client'
+        if (userRole !== 'admin' && userRole !== 'manager') {
+          router.replace('/admin/login')
+          return
+        }
+        
+        setAuthLoading(false)
+        fetchData()
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error)
+        router.replace('/admin/login')
+      }
+    }
+    
+    checkAuth()
+  }, [router])
+
+  useEffect(() => {
+    if (!authLoading) {
+      fetchData()
+    }
+  }, [authLoading])
 
   const fetchData = async () => {
     setLoading(true)
     try {
       const [vehiclesRes, quotesRes] = await Promise.all([
-        fetch('/api/vehicles'),
+        fetch('/api/vehicles?admin=true'),
         fetch('/api/quotes')
       ])
       
@@ -138,6 +227,12 @@ export default function AdminPage() {
     setVehicleForm(prev => ({ ...prev, [field]: value }))
   }
 
+  const closeCreateModal = () => {
+    setIsCreatingVehicle(false)
+    setVehiclePhotos([])
+    setCreateError('')
+  }
+
   const handleCreateVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreating(true)
@@ -157,7 +252,19 @@ export default function AdminPage() {
         description: vehicleForm.description || null,
         features: vehicleForm.features
           ? vehicleForm.features.split(',').map(s => s.trim()).filter(Boolean)
-          : []
+          : [],
+        photos: vehiclePhotos.map(photo => photo.dataUrl || ''),
+        // Novos campos para compatibilidade com o site público
+        capacity_ton: vehicleForm.capacity_ton ? Number(vehicleForm.capacity_ton) : null,
+        height_m: vehicleForm.height_m ? Number(vehicleForm.height_m) : null,
+        cabine_suplementar: Boolean(vehicleForm.cabine_suplementar),
+        carroceria_aberta: Boolean(vehicleForm.carroceria_aberta),
+        banheiro: Boolean(vehicleForm.banheiro),
+        documents: vehicleForm.documents
+          ? vehicleForm.documents.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        status: vehicleForm.status,
+        featured: Boolean(vehicleForm.featured)
       }
 
       const res = await fetch('/api/vehicles', {
@@ -184,9 +291,18 @@ export default function AdminPage() {
         is_available: true,
         image_url: '',
         description: '',
-        features: ''
+        features: '',
+        // Novos campos para compatibilidade com o site público
+        capacity_ton: undefined,
+        height_m: undefined,
+        cabine_suplementar: false,
+        carroceria_aberta: false,
+        banheiro: false,
+        documents: '',
+        status: 'available',
+        featured: false
       })
-      setIsCreatingVehicle(false)
+      closeCreateModal()
       // Recarregar lista
       fetchData()
     } catch (err: any) {
@@ -194,6 +310,212 @@ export default function AdminPage() {
     } finally {
       setCreating(false)
     }
+  }
+
+  // Funções para edição de veículos
+  const openEditModal = (vehicle: AdminVehicle) => {
+    setEditingVehicle(vehicle)
+    setEditForm({
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year,
+      plate: vehicle.plate,
+      category: vehicle.category,
+      daily_rate: vehicle.daily_rate,
+      weekly_rate: vehicle.weekly_rate ?? undefined,
+      monthly_rate: vehicle.monthly_rate ?? undefined,
+      is_available: vehicle.is_available,
+      description: vehicle.description || '',
+      features: vehicle.features?.join(', ') || '',
+      // Novos campos para compatibilidade com o site público
+      capacity_ton: vehicle.capacity_ton ?? undefined,
+      height_m: vehicle.height_m ?? undefined,
+      cabine_suplementar: vehicle.cabine_suplementar ?? false,
+      carroceria_aberta: vehicle.carroceria_aberta ?? false,
+      banheiro: vehicle.banheiro ?? false,
+      documents: vehicle.documents?.join(', ') || '',
+      status: vehicle.status || 'available',
+      featured: vehicle.featured ?? false
+    })
+    
+    // Carregar imagens existentes do veículo
+    if (vehicle.photos && vehicle.photos.length > 0) {
+      const existingPhotos = vehicle.photos.map((photoUrl, index) => ({
+        id: `existing_${vehicle.id}_${index}`,
+        image_type: 'image/jpeg',
+        image_name: `Foto ${index + 1}`,
+        image_size: 0,
+        is_primary: index === 0,
+        created_at: new Date().toISOString(),
+        dataUrl: photoUrl
+      }))
+      setVehiclePhotos(existingPhotos)
+    } else {
+      setVehiclePhotos([])
+    }
+    setIsEditModalOpen(true)
+  }
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false)
+    setEditingVehicle(null)
+    setVehiclePhotos([])
+  }
+
+  const handleEditFormChange = (field: string, value: any) => {
+    setEditForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleUpdateVehicle = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingVehicle) return
+
+    setCreating(true)
+    try {
+      const payload = {
+        brand: editForm.brand,
+        model: editForm.model,
+        year: Number(editForm.year),
+        plate: editForm.plate,
+        category: editForm.category,
+        daily_rate: Number(editForm.daily_rate),
+        weekly_rate: editForm.weekly_rate ? Number(editForm.weekly_rate) : null,
+        monthly_rate: editForm.monthly_rate ? Number(editForm.monthly_rate) : null,
+        is_available: Boolean(editForm.is_available),
+        description: editForm.description || null,
+        features: editForm.features
+          ? editForm.features.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        image_url: vehiclePhotos.length > 0 ? vehiclePhotos[0].dataUrl : null,
+        photos: vehiclePhotos.map(photo => photo.dataUrl || ''),
+        // Novos campos para compatibilidade com o site público
+        capacity_ton: editForm.capacity_ton ? Number(editForm.capacity_ton) : null,
+        height_m: editForm.height_m ? Number(editForm.height_m) : null,
+        cabine_suplementar: Boolean(editForm.cabine_suplementar),
+        carroceria_aberta: Boolean(editForm.carroceria_aberta),
+        banheiro: Boolean(editForm.banheiro),
+        documents: editForm.documents
+          ? editForm.documents.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        status: editForm.status,
+        featured: Boolean(editForm.featured)
+      }
+
+      const res = await fetch(`/api/vehicles/${editingVehicle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || 'Erro ao atualizar veículo')
+      }
+
+      closeEditModal()
+      fetchData() // Recarregar lista
+    } catch (err: any) {
+      console.error('Erro ao atualizar veículo:', err)
+      alert(err?.message || 'Erro ao atualizar veículo')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDeleteVehicle = async (vehicleId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este veículo?')) return
+
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'DELETE'
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || 'Erro ao excluir veículo')
+      }
+
+      fetchData() // Recarregar lista
+    } catch (err: any) {
+      console.error('Erro ao excluir veículo:', err)
+      alert(err?.message || 'Erro ao excluir veículo')
+    }
+  }
+
+
+  const handlePhotoUpload = async (files: FileList) => {
+    if (files.length === 0) return
+
+    setUploadingPhotos(true)
+    try {
+      // Validar arquivos
+      const validFiles = Array.from(files).filter(file => {
+        if (!file.type.startsWith('image/')) {
+          alert(`Arquivo "${file.name}" não é uma imagem válida`)
+          return false
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`Arquivo "${file.name}" é muito grande (máximo 5MB)`)
+          return false
+        }
+        return true
+      })
+
+      if (validFiles.length === 0) {
+        setUploadingPhotos(false)
+        return
+      }
+
+      const uploadPromises = validFiles.map(async (file) => {
+        // Converter arquivo para base64 para armazenamento temporário
+        return new Promise<{dataUrl: string, file: File}>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              resolve({ dataUrl: reader.result, file })
+            } else {
+              reject(new Error('Erro ao converter arquivo'))
+            }
+          }
+          reader.onerror = () => reject(new Error('Erro ao ler arquivo'))
+          reader.readAsDataURL(file)
+        })
+      })
+
+      const uploadedImages = await Promise.all(uploadPromises)
+      const newPhotos = uploadedImages.map(({ dataUrl, file }, index) => ({
+        id: `temp_${Date.now()}_${index}`,
+        image_type: file.type,
+        image_name: file.name,
+        image_size: file.size,
+        is_primary: index === 0 && vehiclePhotos.length === 0,
+        created_at: new Date().toISOString(),
+        dataUrl
+      }))
+
+      setVehiclePhotos(prev => [...prev, ...newPhotos])
+      
+      // Feedback de sucesso
+      if (validFiles.length > 0) {
+        console.log(`✅ ${validFiles.length} foto(s) carregada(s) com sucesso!`)
+      }
+    } catch (err) {
+      console.error('Erro no upload de fotos:', err)
+      alert('Erro ao processar as fotos. Tente novamente.')
+    } finally {
+      setUploadingPhotos(false)
+    }
+  }
+
+  const removePhoto = (index: number) => {
+    setVehiclePhotos(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const setPrimaryPhoto = (index: number) => {
+    setVehiclePhotos(prev => prev.map((photo, i) => ({
+      ...photo,
+      is_primary: i === index
+    })))
   }
 
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
@@ -271,6 +593,18 @@ export default function AdminPage() {
   }
 
   // Render direto: acesso já protegido pelo middleware
+
+  // Mostrar loading enquanto verifica autenticação
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticação...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -389,7 +723,7 @@ export default function AdminPage() {
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">Frota de Veículos</h3>
                   <button
-                    onClick={() => setIsCreatingVehicle(v => !v)}
+                    onClick={() => isCreatingVehicle ? closeCreateModal() : setIsCreatingVehicle(true)}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2"
                   >
                     <Plus className="h-4 w-4" />
@@ -520,13 +854,114 @@ export default function AdminPage() {
                         placeholder="Guindaste, Operador incluso, Seguro"
                       />
                     </div>
+                    
+                    {/* Novos campos para compatibilidade com o site público */}
+                    <div className="md:col-span-2">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">📋 Especificações Técnicas</h4>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Capacidade (toneladas)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={vehicleForm.capacity_ton ?? ''}
+                        onChange={(e) => handleVehicleFormChange('capacity_ton', e.target.value ? Number(e.target.value) : undefined)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                        placeholder="Ex: 8.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Altura (metros)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={vehicleForm.height_m ?? ''}
+                        onChange={(e) => handleVehicleFormChange('height_m', e.target.value ? Number(e.target.value) : undefined)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                        placeholder="Ex: 12.5"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">🚛 Características do Veículo</h4>
+                    </div>
+                    
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={vehicleForm.cabine_suplementar}
+                          onChange={(e) => handleVehicleFormChange('cabine_suplementar', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Cabine Suplementar</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={vehicleForm.carroceria_aberta}
+                          onChange={(e) => handleVehicleFormChange('carroceria_aberta', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Carroceria Aberta</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={vehicleForm.banheiro}
+                          onChange={(e) => handleVehicleFormChange('banheiro', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Banheiro</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={vehicleForm.featured}
+                          onChange={(e) => handleVehicleFormChange('featured', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">⭐ Destaque na Frota</span>
+                      </label>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <select
+                        value={vehicleForm.status}
+                        onChange={(e) => handleVehicleFormChange('status', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                      >
+                        <option value="available">Disponível</option>
+                        <option value="rented">Locado</option>
+                        <option value="maintenance">Manutenção</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Documentos (separados por vírgula)</label>
+                      <input
+                        type="text"
+                        value={vehicleForm.documents}
+                        onChange={(e) => handleVehicleFormChange('documents', e.target.value)}
+                        className="mt-1 w-full px-3 py-2 border rounded-md"
+                        placeholder="CRLV, Seguro, ART, NR-35"
+                      />
+                    </div>
+                    
                     {createError && (
                       <div className="md:col-span-2 text-sm text-red-600">{createError}</div>
                     )}
                     <div className="md:col-span-2 flex items-center justify-end space-x-2">
                       <button
                         type="button"
-                        onClick={() => setIsCreatingVehicle(false)}
+                        onClick={closeCreateModal}
                         className="px-4 py-2 border rounded-md text-sm"
                       >
                         Cancelar
@@ -566,6 +1001,22 @@ export default function AdminPage() {
                           <div className="text-right">
                             <div className="text-sm font-medium text-gray-900">R$ {Number(vehicle.daily_rate).toFixed(2)}/dia</div>
                             <div className="text-sm text-gray-500">{vehicle.category}</div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => openEditModal(vehicle)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                              title="Editar veículo"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVehicle(vehicle.id)}
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                              title="Excluir veículo"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -780,6 +1231,389 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* Modal de Edição de Veículo */}
+      {isEditModalOpen && editingVehicle && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Editar Veículo - {editingVehicle.brand} {editingVehicle.model}
+                </h3>
+                <button
+                  onClick={closeEditModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateVehicle} className="space-y-6">
+                {/* Informações Básicas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Marca</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.brand}
+                      onChange={(e) => handleEditFormChange('brand', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Modelo</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.model}
+                      onChange={(e) => handleEditFormChange('model', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Ano</label>
+                    <input
+                      type="number"
+                      required
+                      value={editForm.year}
+                      onChange={(e) => handleEditFormChange('year', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Placa</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.plate}
+                      onChange={(e) => handleEditFormChange('plate', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Categoria</label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.category}
+                      onChange={(e) => handleEditFormChange('category', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Disponível</label>
+                    <select
+                      value={editForm.is_available ? 'true' : 'false'}
+                      onChange={(e) => handleEditFormChange('is_available', e.target.value === 'true')}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="true">Disponível</option>
+                      <option value="false">Indisponível</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Valores */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Valor Diário (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editForm.daily_rate}
+                      onChange={(e) => handleEditFormChange('daily_rate', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Valor Semanal (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editForm.weekly_rate ?? ''}
+                      onChange={(e) => handleEditFormChange('weekly_rate', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Valor Mensal (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editForm.monthly_rate ?? ''}
+                      onChange={(e) => handleEditFormChange('monthly_rate', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Descrição */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                  <textarea
+                    rows={3}
+                    value={editForm.description}
+                    onChange={(e) => handleEditFormChange('description', e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Descreva as características e especificações do veículo..."
+                  />
+                </div>
+
+                {/* Características */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Características (separadas por vírgula)</label>
+                  <input
+                    type="text"
+                    value={editForm.features}
+                    onChange={(e) => handleEditFormChange('features', e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Guindaste, Operador incluso, Seguro"
+                  />
+                </div>
+
+                {/* Especificações Técnicas */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4">📋 Especificações Técnicas</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Capacidade (toneladas)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editForm.capacity_ton ?? ''}
+                        onChange={(e) => handleEditFormChange('capacity_ton', e.target.value ? Number(e.target.value) : undefined)}
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Ex: 8.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Altura (metros)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editForm.height_m ?? ''}
+                        onChange={(e) => handleEditFormChange('height_m', e.target.value ? Number(e.target.value) : undefined)}
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Ex: 12.5"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Características do Veículo */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4">🚛 Características do Veículo</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={editForm.cabine_suplementar}
+                          onChange={(e) => handleEditFormChange('cabine_suplementar', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Cabine Suplementar</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={editForm.carroceria_aberta}
+                          onChange={(e) => handleEditFormChange('carroceria_aberta', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Carroceria Aberta</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={editForm.banheiro}
+                          onChange={(e) => handleEditFormChange('banheiro', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Banheiro</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={editForm.featured}
+                          onChange={(e) => handleEditFormChange('featured', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">⭐ Destaque</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status e Documentos */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <select
+                      value={editForm.status}
+                      onChange={(e) => handleEditFormChange('status', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="available">Disponível</option>
+                      <option value="rented">Locado</option>
+                      <option value="maintenance">Manutenção</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Documentos (separados por vírgula)</label>
+                    <input
+                      type="text"
+                      value={editForm.documents}
+                      onChange={(e) => handleEditFormChange('documents', e.target.value)}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="CRLV, Seguro, ART, NR-35"
+                    />
+                  </div>
+                </div>
+
+                {/* Upload de Fotos */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    📸 Adicionar Fotos do Veículo
+                  </label>
+                  
+                  {/* Área de Upload */}
+                  <div className="mb-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
+                        className="hidden"
+                        id="vehicle-photo-upload"
+                        disabled={uploadingPhotos}
+                      />
+                      <label 
+                        htmlFor="vehicle-photo-upload"
+                        className={`cursor-pointer inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white transition-colors ${
+                          uploadingPhotos 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'
+                        }`}
+                      >
+                        {uploadingPhotos ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                            Carregando...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Selecionar Fotos
+                          </>
+                        )}
+                      </label>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Clique para escolher uma ou mais fotos (JPG, PNG, GIF)
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Máximo 5MB por foto • Múltiplas fotos permitidas
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Galeria de fotos */}
+                  {vehiclePhotos.length > 0 ? (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        📷 Fotos Selecionadas ({vehiclePhotos.length})
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {vehiclePhotos.map((photo, index) => (
+                          <div key={photo.id} className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <img
+                              src={photo.dataUrl || `/api/images/${photo.id}`}
+                              alt={photo.image_name || `Foto ${index + 1}`}
+                              className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setPrimaryPhoto(index)}
+                              title={photo.is_primary ? "Foto principal (clique para alterar)" : "Clique para definir como principal"}
+                            />
+                            <div className="absolute top-2 left-2">
+                              {photo.is_primary ? (
+                                <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                  ⭐ Principal
+                                </span>
+                              ) : (
+                                <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Clique para definir como principal
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removePhoto(index)
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              title="Remover foto"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </button>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {photo.image_name || `Foto ${index + 1}`}
+                              {photo.is_primary && <span className="block text-orange-300">⭐ Foto principal</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                        <p className="text-xs text-blue-700">
+                          💡 <strong>Dicas:</strong> A primeira foto é definida como principal automaticamente. 
+                          Clique em qualquer foto para alterar qual é a principal. 
+                          A foto principal será exibida como destaque na listagem de veículos.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">Nenhuma foto selecionada</p>
+                      <p className="text-xs mt-1">Clique em "Selecionar Fotos" acima para adicionar imagens</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botões de ação */}
+                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                  >
+                    {creating ? 'Salvando...' : 'Salvar Alterações'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       
     </div>
   )

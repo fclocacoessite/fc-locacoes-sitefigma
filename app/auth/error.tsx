@@ -2,18 +2,12 @@
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Footer } from '@/components/Footer'
+import Link from 'next/link'
 
-export default function AuthError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
+export default function AuthError() {
   useEffect(() => {
-    console.error('Auth Error:', error)
-  }, [error])
+    console.error('Auth Error occurred')
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -24,31 +18,25 @@ export default function AuthError({
           </svg>
         </div>
         
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Erro na Autenticação</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Erro de Autenticação</h2>
         <p className="text-gray-600 mb-6">
-          Ocorreu um erro durante o processo de autenticação. Tente novamente.
+          Ocorreu um erro durante o processo de autenticação. Verifique suas credenciais e tente novamente.
         </p>
         
         <div className="space-y-3">
-          <Button
-            onClick={reset}
-            className="w-full bg-orange-500 hover:bg-orange-600"
-          >
-            Tentar Novamente
-          </Button>
+          <Link href="/auth/signin">
+            <Button className="w-full bg-orange-500 hover:bg-orange-600">
+              Tentar Novamente
+            </Button>
+          </Link>
           
-          <Button
-            variant="outline"
-            onClick={() => window.location.href = '/'}
-            className="w-full"
-          >
-            Voltar ao Início
-          </Button>
+          <Link href="/">
+            <Button variant="outline" className="w-full">
+              Voltar ao Site
+            </Button>
+          </Link>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

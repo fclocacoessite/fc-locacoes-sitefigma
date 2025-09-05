@@ -8,34 +8,18 @@ import {
   MapPin, 
   Clock, 
   MessageCircle,
-  Facebook,
   Instagram,
-  Linkedin,
   MessageSquare
 } from 'lucide-react'
 
 export default function ContatoPage() {
   const socialLinks = [
     {
-      name: 'Facebook',
-      icon: Facebook,
-      url: 'https://facebook.com/fclocacoes',
-      color: 'bg-blue-600 hover:bg-blue-700',
-      description: 'Siga-nos no Facebook'
-    },
-    {
       name: 'Instagram',
       icon: Instagram,
       url: 'https://www.instagram.com/fclocacoesltda?igsh=MXc0Njg1ZGZnZmJyeQ%3D%3D&utm_source=qr',
       color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
       description: 'Veja nossas fotos no Instagram'
-    },
-    {
-      name: 'LinkedIn',
-      icon: Linkedin,
-      url: 'https://linkedin.com/company/fclocacoes',
-      color: 'bg-blue-700 hover:bg-blue-800',
-      description: 'Conecte-se conosco no LinkedIn'
     },
     {
       name: 'WhatsApp',
@@ -144,7 +128,7 @@ export default function ContatoPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             {socialLinks.map((social, index) => {
               const Icon = social.icon
               return (

@@ -199,7 +199,7 @@ export default function FrotaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <MobileHeader />
 
       {/* Hero Section */}
@@ -214,7 +214,9 @@ export default function FrotaPage() {
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Main Content */}
+      <div className="flex-grow">
+        {/* Filtros */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           {categories.map((category) => (
@@ -243,7 +245,7 @@ export default function FrotaPage() {
         {!loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredVehicles.map((vehicle) => (
-              <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden border hover:shadow-xl transition-shadow">
+              <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden border hover:shadow-xl transition-shadow flex flex-col h-full">
                 <div className="relative h-48">
                   <img
                     src={vehicle.photos?.[0] || 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
@@ -279,7 +281,7 @@ export default function FrotaPage() {
                   )}
                 </div>
                 
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-grow">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-gray-900">
                       {vehicle.model}
@@ -312,7 +314,7 @@ export default function FrotaPage() {
                   </div>
                   
                   {/* Features */}
-                  <div className="mb-4">
+                  <div className="mb-4 flex-grow">
                     <div className="flex flex-wrap gap-2">
                       {vehicle.features?.map((feature, index) => (
                         <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
@@ -322,17 +324,19 @@ export default function FrotaPage() {
                     </div>
                   </div>
                   
-                  {/* Botão */}
-                  <a
-                    href={`/orcamento?vehicle_id=${vehicle.id}`}
-                    className={`block w-full text-center py-2 px-4 rounded-lg font-medium transition-colors ${
-                      vehicle.status === 'available'
-                        ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {vehicle.status === 'available' ? 'Solicitar Orçamento' : 'Indisponível'}
-                  </a>
+                  {/* Botão - sempre na parte inferior */}
+                  <div className="mt-auto">
+                    <a
+                      href={`/orcamento?vehicle_id=${vehicle.id}`}
+                      className={`block w-full text-center py-3 px-4 rounded-lg font-medium transition-colors min-h-[48px] flex items-center justify-center ${
+                        vehicle.status === 'available'
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {vehicle.status === 'available' ? 'Solicitar Orçamento' : 'Indisponível'}
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -442,6 +446,7 @@ export default function FrotaPage() {
             </a>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Footer */}

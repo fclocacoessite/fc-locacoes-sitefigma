@@ -27,7 +27,6 @@ export function AdvancedSettings() {
     keywords: 'locação, caminhão munck, cesto aéreo, equipamentos, construção, são paulo',
     googleAnalytics: '',
     googleTagManager: '',
-    facebookPixel: '',
     robotsTxt: 'User-agent: *\nAllow: /',
     sitemap: true
   });
@@ -159,16 +158,6 @@ export function AdvancedSettings() {
             <p className="text-xs text-fc-medium-gray mt-1">ID do contêiner do Google Tag Manager</p>
           </div>
 
-          <div>
-            <Label htmlFor="facebookPixel">Facebook Pixel</Label>
-            <Input
-              id="facebookPixel"
-              value={seoSettings.facebookPixel}
-              onChange={(e) => setSeoSettings(prev => ({ ...prev, facebookPixel: e.target.value }))}
-              placeholder="123456789012345"
-            />
-            <p className="text-xs text-fc-medium-gray mt-1">ID do Facebook Pixel para acompanhamento de conversões</p>
-          </div>
 
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-start space-x-3">

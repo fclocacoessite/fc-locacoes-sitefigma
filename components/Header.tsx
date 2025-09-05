@@ -11,9 +11,9 @@ export function Header() {
   // Informações rotativas para o top bar
   const topBarInfo = [
     { icon: 'phone', text: '(21) 99215-4030', label: 'Telefone' },
-    { icon: 'mail', text: 'contato@fclocacoes.com.br', label: 'Email' },
+    { icon: 'mail', text: 'suporte@fclocacoes.com.br', label: 'Email' },
     { icon: 'clock', text: 'Atendimento 24h', label: 'Horário' },
-    { icon: 'map-pin', text: 'Grande São Paulo', label: 'Região' },
+    { icon: 'map-pin', text: 'Nova Iguaçu', label: 'Região' },
     { icon: 'truck', text: 'Frota Própria', label: 'Serviço' }
   ]
 
@@ -91,33 +91,49 @@ export function Header() {
             </div>
             
             {/* Área de autenticação */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
               {!session ? (
                 <div className="text-white text-xs">Carregando...</div>
               ) : user ? (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
+                  
+                  {/* Botão para Admin se for admin/manager */}
+                  {(user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager') && (
+                    <Link href="/admin">
+                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
+                        Admin
+                      </button>
+                    </Link>
+                  )}
                   
                   {/* Botão Área do Cliente */}
                   <Link href="/portal-cliente">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                      Área do Cliente
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
+                      Portal
                     </button>
                   </Link>
                   
                   <button
                     onClick={() => signOut()}
-                    className="border border-white/20 hover:bg-white/10 text-white px-3 py-1 rounded text-xs transition-colors"
+                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors"
                   >
                     Sair
                   </button>
                 </div>
               ) : (
-                <Link href="/auth/signin">
-                  <button className="border border-white/20 hover:bg-white/10 text-white px-3 py-1 rounded text-xs">
-                    Portal do Cliente
-                  </button>
-                </Link>
+                <div className="flex items-center space-x-1">
+                  <Link href="/auth/signin">
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
+                      Cliente
+                    </button>
+                  </Link>
+                  <Link href="/admin/login">
+                    <button className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors">
+                      Admin
+                    </button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>

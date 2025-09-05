@@ -28,7 +28,7 @@ export function Hero() {
 
             {/* Subtitle */}
             <p className="text-xl text-gray-300 mb-8 max-w-xl">
-              Soluções completas em içamento e transporte para sua obra. Frota moderna, operadores qualificados e atendimento em toda Grande São Paulo.
+              Soluções completas em içamento e transporte para sua obra. Frota moderna, operadores qualificados e atendimento em toda região de Nova Iguaçu.
             </p>
 
             {/* CTA Buttons */}
