@@ -4,11 +4,19 @@ export { supabase, supabaseAdmin } from './supabase-client'
 // Tipos para o banco de dados
 export interface Vehicle {
   id: string
-  category: string
+  brand: string
   model: string
+  year: number
+  plate: string
+  category: string
+  daily_rate: number
+  weekly_rate?: number | null
+  monthly_rate?: number | null
+  is_available: boolean
+  image_url?: string | null
   description?: string
-  capacity_ton?: number
-  height_m?: number
+  capacity_ton?: number | null
+  height_m?: number | null
   cabine_suplementar: boolean
   carroceria_aberta: boolean
   banheiro: boolean

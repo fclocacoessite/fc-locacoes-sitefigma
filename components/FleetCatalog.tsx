@@ -53,7 +53,7 @@ export function FleetCatalog() {
       id: '5',
       name: 'Caminhão 3/4 Baú',
       category: 'Transporte',
-      image: '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
+      image: '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
       specs: { capacity: '3,5 toneladas', year: '2021' },
       available: true,
       price: 'R$ 350/dia'

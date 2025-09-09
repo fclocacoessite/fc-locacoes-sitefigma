@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Vehicle } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
 import { Footer } from '@/components/Footer'
@@ -109,18 +109,18 @@ const localVehicles = [
     category: 'Caminhão 3/4',
     description: 'Caminhão 3/4 com baú fechado, ideal para transportes de mercadorias e cargas sensíveis.',
     photos: [
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (1).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (2).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (3).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (4).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (5).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (6).jpeg',
-      '/img/Nova pasta/WhatsApp Image 2025-09-03 at 11.40.01 (7).jpeg'
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01.jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (1).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (2).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (3).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (4).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (5).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (6).jpeg',
+      '/img/VEÍCULO 34 COM CABINE SUPLEMENTAR DE 8 PASSAGEIROS E CARROCERIA ABERTA METALICA/WhatsApp Image 2025-09-03 at 11.40.01 (7).jpeg'
     ],
     capacity_ton: 3.5,
     height_m: undefined,
-    status: 'available',
+    status: 'rented',
     featured: false,
     cabine_suplementar: false,
     carroceria_aberta: false,
@@ -142,7 +142,7 @@ const localVehicles = [
     ],
     capacity_ton: 25,
     height_m: 22,
-    status: 'available',
+    status: 'maintenance',
     featured: true,
     cabine_suplementar: true,
     carroceria_aberta: true,
@@ -160,20 +160,63 @@ export default function FrotaPage() {
   const [filter, setFilter] = useState('all')
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imagesLoaded, setImagesLoaded] = useState(0)
 
   useEffect(() => {
-    // Usar veículos locais em vez de fazer fetch da API
-    setVehicles(localVehicles)
-    setLoading(false)
+    const fetchVehicles = async () => {
+      try {
+        setLoading(true)
+        
+        // Usar cache inteligente para melhor performance
+        const response = await fetch('/api/vehicles', {
+          cache: 'no-store', // Não usar cache para garantir dados atualizados
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('📡 Dados recebidos da API:', data.vehicles?.length || 0, 'veículos')
+          console.log('🖼️ Primeiro veículo com fotos:', data.vehicles?.[0]?.photos?.length || 0, 'fotos')
+          setVehicles(data.vehicles || [])
+        } else {
+          console.error('❌ Erro ao buscar veículos:', response.statusText)
+          console.log('🔄 Usando dados locais como fallback...')
+          // Fallback para dados locais em caso de erro
+          setVehicles(localVehicles)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar veículos:', error)
+        // Fallback para dados locais em caso de erro
+        setVehicles(localVehicles)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchVehicles()
   }, [])
 
-  const filteredVehicles = vehicles.filter(vehicle => {
-    if (filter === 'all') return true
-    if (filter === 'munck') return vehicle.category.toLowerCase().includes('munck')
-    if (filter === 'cesto') return vehicle.category.toLowerCase().includes('cesto')
-    if (filter === 'caminhão') return vehicle.category.toLowerCase().includes('3/4')
-    return true
-  })
+  // Memoizar filtros para melhor performance
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter(vehicle => {
+      if (filter === 'all') return true
+      if (filter === 'munck') return vehicle.category.toLowerCase().includes('munck')
+      if (filter === 'cesto') return vehicle.category.toLowerCase().includes('cesto')
+      if (filter === 'caminhão') return vehicle.category.toLowerCase().includes('3/4')
+      return true
+    })
+  }, [vehicles, filter])
+
+  // Paginação para melhor performance
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage)
+  const paginatedVehicles = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredVehicles.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredVehicles, currentPage, itemsPerPage])
 
   const categories = [
     { key: 'all', label: 'Todos' },
@@ -182,21 +225,59 @@ export default function FrotaPage() {
     { key: 'caminhão', label: 'Caminhões 3/4' },
   ]
 
-  const nextImage = () => {
+  // Memoizar funções de navegação para melhor performance
+  const nextImage = useCallback(() => {
     if (selectedVehicle) {
       setCurrentImageIndex((prev) => 
         prev === selectedVehicle.photos.length - 1 ? 0 : prev + 1
       )
     }
-  }
+  }, [selectedVehicle])
 
-  const prevImage = () => {
+  const prevImage = useCallback(() => {
     if (selectedVehicle) {
       setCurrentImageIndex((prev) => 
         prev === 0 ? selectedVehicle.photos.length - 1 : prev - 1
       )
     }
-  }
+  }, [selectedVehicle])
+
+  // Callback para rastrear carregamento de imagens
+  const handleImageLoad = useCallback(() => {
+    setImagesLoaded(prev => prev + 1)
+  }, [])
+
+
+  // Navegação por teclado para o modal de visualização de fotos
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!selectedVehicle || selectedVehicle.photos.length <= 1) return
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        setCurrentImageIndex(prev => 
+          prev === 0 ? selectedVehicle.photos.length - 1 : prev - 1
+        )
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        setCurrentImageIndex(prev => 
+          prev === selectedVehicle.photos.length - 1 ? 0 : prev + 1
+        )
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        setSelectedVehicle(null)
+        setCurrentImageIndex(0)
+      }
+    }
+
+    if (selectedVehicle) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [selectedVehicle])
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -244,14 +325,25 @@ export default function FrotaPage() {
         {/* Grid de Veículos */}
         {!loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredVehicles.map((vehicle) => (
+            {paginatedVehicles.map((vehicle) => (
               <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden border hover:shadow-xl transition-shadow flex flex-col h-full">
                 <div className="relative h-48">
                   <img
                     src={vehicle.photos?.[0] || 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                    alt={`${vehicle.category} ${vehicle.model}`}
+                    alt={`${vehicle.brand} ${vehicle.model} - ${vehicle.category}`}
                     className="w-full h-full object-cover cursor-pointer"
+                    loading="lazy"
+                    onLoad={(e) => {
+                      console.log('✅ Imagem carregada com sucesso:', vehicle.photos?.[0])
+                      handleImageLoad()
+                    }}
+                    onError={(e) => {
+                      console.error('❌ Erro ao carregar imagem:', vehicle.photos?.[0])
+                      console.log('🔄 Tentando imagem de fallback...')
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+                    }}
                     onClick={() => {
+                      console.log('🖼️ Abrindo modal para veículo:', vehicle.id)
                       setSelectedVehicle(vehicle)
                       setCurrentImageIndex(0)
                     }}
@@ -260,9 +352,13 @@ export default function FrotaPage() {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       vehicle.status === 'available'
                         ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        : vehicle.status === 'rented'
+                        ? 'bg-pink-100 text-pink-800'
+                        : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {vehicle.status === 'available' ? 'Disponível' : 'Locado'}
+                      {vehicle.status === 'available' ? 'Disponível' : 
+                       vehicle.status === 'rented' ? 'Locado' : 
+                       vehicle.status === 'maintenance' ? 'Manutenção' : 'Indisponível'}
                     </span>
                   </div>
                   {vehicle.featured && (
@@ -284,7 +380,7 @@ export default function FrotaPage() {
                 <div className="p-6 flex flex-col flex-grow">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-gray-900">
-                      {vehicle.model}
+                      {vehicle.brand} {vehicle.model}
                     </h3>
                   </div>
                   
@@ -326,20 +422,59 @@ export default function FrotaPage() {
                   
                   {/* Botão - sempre na parte inferior */}
                   <div className="mt-auto">
-                    <a
-                      href={`/orcamento?vehicle_id=${vehicle.id}`}
-                      className={`block w-full text-center py-3 px-4 rounded-lg font-medium transition-colors min-h-[48px] flex items-center justify-center ${
-                        vehicle.status === 'available'
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {vehicle.status === 'available' ? 'Solicitar Orçamento' : 'Indisponível'}
-                    </a>
+                    {vehicle.status === 'available' ? (
+                      <a
+                        href={`/orcamento?vehicle_id=${vehicle.id}`}
+                        className="block w-full text-center py-3 px-4 rounded-lg font-medium transition-colors min-h-[48px] flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white"
+                      >
+                        Solicitar Orçamento
+                      </a>
+                    ) : (
+                      <div className="block w-full text-center py-3 px-4 rounded-lg font-medium min-h-[48px] flex items-center justify-center bg-gray-300 text-gray-500 cursor-not-allowed">
+                        {vehicle.status === 'maintenance' ? 'Em Manutenção' : 'Indisponível'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Controles de Paginação */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
+            </button>
+            
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Próxima
+            </button>
           </div>
         )}
 
@@ -358,9 +493,16 @@ export default function FrotaPage() {
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">
-                {selectedVehicle.model} - {selectedVehicle.category}
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {selectedVehicle.brand} {selectedVehicle.model} - {selectedVehicle.category}
+                </h3>
+                {selectedVehicle.photos.length > 1 && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    ⌨️ Use ← → para navegar • ESC para fechar
+                  </p>
+                )}
+              </div>
               <button
                 onClick={() => setSelectedVehicle(null)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -372,8 +514,12 @@ export default function FrotaPage() {
             <div className="relative p-4">
               <img
                 src={selectedVehicle.photos[currentImageIndex]}
-                alt={`${selectedVehicle.model} - Imagem ${currentImageIndex + 1}`}
+                alt={`${selectedVehicle.brand} ${selectedVehicle.model} - Imagem ${currentImageIndex + 1}`}
                 className="w-full h-96 object-contain rounded"
+                onError={(e) => {
+                  console.error('Erro ao carregar imagem no modal:', selectedVehicle.photos[currentImageIndex])
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+                }}
               />
               
               {selectedVehicle.photos.length > 1 && (

@@ -71,9 +71,13 @@ export default function AdminPage() {
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
+  const [visibleVehicles, setVisibleVehicles] = useState(10) // Mostrar apenas 10 veículos inicialmente
   const [isCreatingVehicle, setIsCreatingVehicle] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  const [updatingVehicle, setUpdatingVehicle] = useState<string | null>(null)
+  const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null)
+  const [updateProgress, setUpdateProgress] = useState<string>('')
   
   // Estados para edição de veículos
   const [editingVehicle, setEditingVehicle] = useState<AdminVehicle | null>(null)
@@ -170,16 +174,64 @@ export default function AdminPage() {
     }
   }, [authLoading])
 
+  // Navegação por teclado para fotos no modal de edição
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isEditModalOpen || vehiclePhotos.length === 0) return
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        const currentPrimaryIndex = vehiclePhotos.findIndex(photo => photo.is_primary)
+        const prevIndex = currentPrimaryIndex > 0 ? currentPrimaryIndex - 1 : vehiclePhotos.length - 1
+        setPrimaryPhoto(prevIndex)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        const currentPrimaryIndex = vehiclePhotos.findIndex(photo => photo.is_primary)
+        const nextIndex = currentPrimaryIndex < vehiclePhotos.length - 1 ? currentPrimaryIndex + 1 : 0
+        setPrimaryPhoto(nextIndex)
+      }
+    }
+
+    if (isEditModalOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isEditModalOpen, vehiclePhotos])
+
+  // Carregamento progressivo de veículos
+  useEffect(() => {
+    if (vehicles.length > visibleVehicles) {
+      const timer = setTimeout(() => {
+        setVisibleVehicles(prev => Math.min(prev + 5, vehicles.length))
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [vehicles.length, visibleVehicles])
+
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [vehiclesRes, quotesRes] = await Promise.all([
-        fetch('/api/vehicles?admin=true'),
-        fetch('/api/quotes')
-      ])
+      // Carregar veículos primeiro (mais importante)
+      const vehiclesRes = await fetch('/api/vehicles?admin=true', {
+        cache: 'default',
+        next: { revalidate: 5 } // Cache de 5 segundos
+      })
       
       const vehiclesJson = await vehiclesRes.json()
       setVehicles(vehiclesJson?.vehicles || [])
+      
+      // Carregar quotes em background (menos crítico)
+      setTimeout(async () => {
+        try {
+          const quotesRes = await fetch('/api/quotes')
+          // Quotes são mockados por enquanto
+        } catch (error) {
+          console.warn('Erro ao carregar quotes:', error)
+        }
+      }, 100)
       
       // Mock quotes data - em produção viria da API
       setQuotes([
@@ -278,6 +330,19 @@ export default function AdminPage() {
         throw new Error(err?.error || 'Erro ao criar veículo')
       }
 
+      const newVehicle = await res.json()
+
+      // Adicionar o novo veículo à lista (otimização)
+      setVehicles(prev => [newVehicle.vehicle, ...prev])
+
+      // Invalidar cache para sincronizar com o site público
+      try {
+        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        console.log('✅ Cache invalidado - novo veículo adicionado')
+      } catch (error) {
+        console.warn('⚠️ Erro ao invalidar cache:', error)
+      }
+
       // Resetar formulário e fechar
       setVehicleForm({
         brand: '',
@@ -302,9 +367,8 @@ export default function AdminPage() {
         status: 'available',
         featured: false
       })
+      setVehiclePhotos([]) // Limpar fotos
       closeCreateModal()
-      // Recarregar lista
-      fetchData()
     } catch (err: any) {
       setCreateError(err?.message || 'Erro ao criar veículo')
     } finally {
@@ -339,6 +403,7 @@ export default function AdminPage() {
     })
     
     // Carregar imagens existentes do veículo
+    console.log('📸 Carregando fotos do veículo:', vehicle.photos?.length || 0, 'fotos')
     if (vehicle.photos && vehicle.photos.length > 0) {
       const existingPhotos = vehicle.photos.map((photoUrl, index) => ({
         id: `existing_${vehicle.id}_${index}`,
@@ -350,8 +415,11 @@ export default function AdminPage() {
         dataUrl: photoUrl
       }))
       setVehiclePhotos(existingPhotos)
+      console.log('📸 Fotos carregadas no modal:', existingPhotos.length, 'fotos')
+      console.log('📸 Detalhes das fotos carregadas:', existingPhotos.map(p => ({ id: p.id, is_primary: p.is_primary })))
     } else {
       setVehiclePhotos([])
+      console.log('📸 Nenhuma foto existente encontrada')
     }
     setIsEditModalOpen(true)
   }
@@ -363,16 +431,32 @@ export default function AdminPage() {
   }
 
   const handleEditFormChange = (field: string, value: any) => {
-    setEditForm(prev => ({ ...prev, [field]: value }))
+    setEditForm(prev => {
+      const newForm = { ...prev, [field]: value }
+      
+      // Se o campo alterado for 'status', atualizar automaticamente o 'is_available'
+      if (field === 'status') {
+        newForm.is_available = value === 'available'
+      }
+      
+      // Se o campo alterado for 'is_available', atualizar automaticamente o 'status'
+      if (field === 'is_available') {
+        newForm.status = value ? 'available' : 'rented'
+      }
+      
+      return newForm
+    })
   }
 
   const handleUpdateVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingVehicle) return
 
-    setCreating(true)
+    setUpdatingVehicle(editingVehicle.id)
+    setUpdateProgress('Preparando dados...')
     try {
-      const payload = {
+      // Preparar payload apenas com campos que mudaram (otimização)
+      const payload: any = {
         brand: editForm.brand,
         model: editForm.model,
         year: Number(editForm.year),
@@ -386,8 +470,6 @@ export default function AdminPage() {
         features: editForm.features
           ? editForm.features.split(',').map(s => s.trim()).filter(Boolean)
           : [],
-        image_url: vehiclePhotos.length > 0 ? vehiclePhotos[0].dataUrl : null,
-        photos: vehiclePhotos.map(photo => photo.dataUrl || ''),
         // Novos campos para compatibilidade com o site público
         capacity_ton: editForm.capacity_ton ? Number(editForm.capacity_ton) : null,
         height_m: editForm.height_m ? Number(editForm.height_m) : null,
@@ -401,6 +483,30 @@ export default function AdminPage() {
         featured: Boolean(editForm.featured)
       }
 
+      // Só processar fotos se houver mudanças (otimização)
+      if (vehiclePhotos.length > 0) {
+        setUpdateProgress('Processando fotos...')
+        
+        // Otimizar imagens para reduzir tamanho (otimização)
+        const optimizedPhotos = await Promise.all(
+          vehiclePhotos.map(async (photo) => {
+            if (!photo.dataUrl) return ''
+            
+            // Se a imagem for muito grande, comprimir
+            if (photo.dataUrl.length > 500000) { // ~500KB
+              return await compressImage(photo.dataUrl, 0.8)
+            }
+            return photo.dataUrl
+          })
+        )
+        
+        payload.image_url = optimizedPhotos[0]
+        payload.photos = optimizedPhotos
+        
+        console.log('Fotos sendo enviadas:', optimizedPhotos.length, optimizedPhotos)
+      }
+
+      setUpdateProgress('Enviando dados...')
       const res = await fetch(`/api/vehicles/${editingVehicle.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -412,19 +518,38 @@ export default function AdminPage() {
         throw new Error(err?.error || 'Erro ao atualizar veículo')
       }
 
+      setUpdateProgress('Finalizando...')
+      const updatedVehicle = await res.json()
+      
+      // Atualizar apenas o veículo específico na lista (otimização)
+      setVehicles(prev => prev.map(vehicle => 
+        vehicle.id === editingVehicle.id 
+          ? { ...vehicle, ...updatedVehicle.vehicle }
+          : vehicle
+      ))
+
+      // Invalidar cache para sincronizar com o site público
+      try {
+        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        console.log('✅ Cache invalidado - alterações sincronizadas')
+      } catch (error) {
+        console.warn('⚠️ Erro ao invalidar cache:', error)
+      }
+
       closeEditModal()
-      fetchData() // Recarregar lista
     } catch (err: any) {
       console.error('Erro ao atualizar veículo:', err)
       alert(err?.message || 'Erro ao atualizar veículo')
     } finally {
-      setCreating(false)
+      setUpdatingVehicle(null)
+      setUpdateProgress('')
     }
   }
 
   const handleDeleteVehicle = async (vehicleId: string) => {
     if (!confirm('Tem certeza que deseja excluir este veículo?')) return
 
+    setDeletingVehicle(vehicleId)
     try {
       const res = await fetch(`/api/vehicles/${vehicleId}`, {
         method: 'DELETE'
@@ -435,17 +560,30 @@ export default function AdminPage() {
         throw new Error(err?.error || 'Erro ao excluir veículo')
       }
 
-      fetchData() // Recarregar lista
+      // Remover apenas o veículo específico da lista (otimização)
+      setVehicles(prev => prev.filter(vehicle => vehicle.id !== vehicleId))
+
+      // Invalidar cache para sincronizar com o site público
+      try {
+        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        console.log('✅ Cache invalidado - veículo excluído')
+      } catch (error) {
+        console.warn('⚠️ Erro ao invalidar cache:', error)
+      }
     } catch (err: any) {
       console.error('Erro ao excluir veículo:', err)
       alert(err?.message || 'Erro ao excluir veículo')
+    } finally {
+      setDeletingVehicle(null)
     }
   }
 
 
-  const handlePhotoUpload = async (files: FileList) => {
-    if (files.length === 0) return
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
+    console.log('📸 Iniciando upload de fotos:', files.length, 'arquivos')
     setUploadingPhotos(true)
     try {
       // Validar arquivos
@@ -466,39 +604,62 @@ export default function AdminPage() {
         return
       }
 
-      const uploadPromises = validFiles.map(async (file) => {
-        // Converter arquivo para base64 para armazenamento temporário
-        return new Promise<{dataUrl: string, file: File}>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => {
-            if (typeof reader.result === 'string') {
-              resolve({ dataUrl: reader.result, file })
-            } else {
-              reject(new Error('Erro ao converter arquivo'))
+      // Processar fotos em lotes para melhor performance
+      const processPhotosInBatches = async (files: File[], batchSize = 3) => {
+        const batches = []
+        for (let i = 0; i < files.length; i += batchSize) {
+          batches.push(files.slice(i, i + batchSize))
+        }
+
+        const allProcessedPhotos = []
+        for (const batch of batches) {
+          const batchPromises = batch.map(async (file, index) => {
+            // Comprimir imagem durante o upload para melhor performance
+            const compressedDataUrl = await compressImageFile(file)
+            return {
+              id: `temp_${Date.now()}_${Math.random()}_${index}`,
+              image_type: file.type,
+              image_name: file.name,
+              image_size: file.size,
+              is_primary: false, // Será definido depois
+              created_at: new Date().toISOString(),
+              dataUrl: compressedDataUrl
             }
-          }
-          reader.onerror = () => reject(new Error('Erro ao ler arquivo'))
-          reader.readAsDataURL(file)
-        })
+          })
+          
+          const batchResults = await Promise.all(batchPromises)
+          allProcessedPhotos.push(...batchResults)
+        }
+        
+        return allProcessedPhotos
+      }
+
+      const newPhotos = await processPhotosInBatches(validFiles)
+      
+      // Adicionar novas fotos às existentes
+      setVehiclePhotos(prev => {
+        console.log('📸 Estado atual das fotos:', prev.length, 'fotos')
+        console.log('📸 Novas fotos processadas:', newPhotos.length, 'fotos')
+        
+        // Definir primeira foto como principal se não houver fotos existentes
+        if (prev.length === 0 && newPhotos.length > 0) {
+          newPhotos[0].is_primary = true
+          console.log('📸 Primeira foto definida como principal')
+        }
+        
+        const updatedPhotos = [...prev, ...newPhotos]
+        console.log('📸 Fotos após adicionar:', updatedPhotos.length, 'fotos totais')
+        console.log('📸 Detalhes das fotos:', updatedPhotos.map(p => ({ id: p.id, is_primary: p.is_primary })))
+        return updatedPhotos
       })
-
-      const uploadedImages = await Promise.all(uploadPromises)
-      const newPhotos = uploadedImages.map(({ dataUrl, file }, index) => ({
-        id: `temp_${Date.now()}_${index}`,
-        image_type: file.type,
-        image_name: file.name,
-        image_size: file.size,
-        is_primary: index === 0 && vehiclePhotos.length === 0,
-        created_at: new Date().toISOString(),
-        dataUrl
-      }))
-
-      setVehiclePhotos(prev => [...prev, ...newPhotos])
       
       // Feedback de sucesso
       if (validFiles.length > 0) {
         console.log(`✅ ${validFiles.length} foto(s) carregada(s) com sucesso!`)
       }
+      
+      // Resetar input para permitir selecionar os mesmos arquivos novamente
+      e.target.value = ''
     } catch (err) {
       console.error('Erro no upload de fotos:', err)
       alert('Erro ao processar as fotos. Tente novamente.')
@@ -507,15 +668,99 @@ export default function AdminPage() {
     }
   }
 
+  // Função para comprimir arquivo durante upload
+  const compressImageFile = (file: File, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Redimensionar se necessário
+        const maxWidth = 1200
+        const maxHeight = 1200
+        let { width, height } = img
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width *= ratio
+          height *= ratio
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        ctx?.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      
+      img.onerror = () => reject(new Error('Erro ao carregar imagem'))
+      
+      const reader = new FileReader()
+      reader.onload = () => {
+        img.src = reader.result as string
+      }
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'))
+      reader.readAsDataURL(file)
+    })
+  }
+
   const removePhoto = (index: number) => {
-    setVehiclePhotos(prev => prev.filter((_, i) => i !== index))
+    console.log('🗑️ Removendo foto no índice:', index)
+    setVehiclePhotos(prev => {
+      console.log('🗑️ Fotos antes da remoção:', prev.length, 'fotos')
+      const filteredPhotos = prev.filter((_, i) => i !== index)
+      console.log('🗑️ Fotos após remoção:', filteredPhotos.length, 'fotos')
+      
+      // Se a foto removida era a principal, definir a primeira como principal
+      if (prev[index]?.is_primary && filteredPhotos.length > 0) {
+        filteredPhotos[0].is_primary = true
+        console.log('🗑️ Nova foto principal definida (índice 0)')
+      }
+      
+      return filteredPhotos
+    })
   }
 
   const setPrimaryPhoto = (index: number) => {
-    setVehiclePhotos(prev => prev.map((photo, i) => ({
-      ...photo,
-      is_primary: i === index
-    })))
+    setVehiclePhotos(prev => {
+      const updatedPhotos = prev.map((photo, i) => ({
+        ...photo,
+        is_primary: i === index
+      }))
+      console.log('Foto principal alterada para índice:', index, updatedPhotos)
+      return updatedPhotos
+    })
+  }
+
+  // Função para comprimir imagens (otimização)
+  const compressImage = (dataUrl: string, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Redimensionar se necessário
+        const maxWidth = 1200
+        const maxHeight = 1200
+        let { width, height } = img
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width *= ratio
+          height *= ratio
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        ctx?.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      
+      img.src = dataUrl
+    })
   }
 
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
@@ -826,14 +1071,95 @@ export default function AdminPage() {
                         <option value="false">Não</option>
                       </select>
                     </div>
+                    {/* Upload de Fotos */}
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">Imagem (URL)</label>
-                      <input
-                        type="url"
-                        value={vehicleForm.image_url}
-                        onChange={(e) => handleVehicleFormChange('image_url', e.target.value)}
-                        className="mt-1 w-full px-3 py-2 border rounded-md"
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        📸 Adicionar Fotos do Veículo
+                      </label>
+                      
+                      {/* Área de Upload */}
+                      <div className="mb-4">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors bg-gray-50">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            disabled={uploadingPhotos}
+                            className="hidden"
+                            id="photo-upload-create"
+                          />
+                          <label 
+                            htmlFor="photo-upload-create"
+                            className={`cursor-pointer inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white transition-colors shadow-sm ${
+                              uploadingPhotos 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'
+                            }`}
+                          >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            {uploadingPhotos ? 'Carregando...' : 'Adicionar Fotos'}
+                          </label>
+                          <p className="mt-2 text-sm text-gray-500">
+                            PNG, JPG até 10MB cada
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Preview das Fotos */}
+                      {uploadingPhotos && (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-2"></div>
+                          <span className="text-sm text-gray-600">Processando fotos...</span>
+                        </div>
+                      )}
+                      {vehiclePhotos.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                          {vehiclePhotos.map((photo, index) => (
+                            <div key={`preview-${photo.id}-${index}`} className="relative group">
+                              <img
+                                src={photo.dataUrl}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 flex space-x-2">
+                                  {index !== 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPrimaryPhoto(index)}
+                                      className="bg-orange-500 text-white p-1 rounded-full hover:bg-orange-600 transition-colors shadow-sm"
+                                      title="Definir como foto principal"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => removePhoto(index)}
+                                    className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                                    title="Remover foto"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                              {index === 0 && (
+                                <div className="absolute top-1 left-1 bg-orange-500 text-white text-xs px-2 py-1 rounded shadow-sm">
+                                  Principal
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700">Descrição</label>
@@ -980,50 +1306,80 @@ export default function AdminPage() {
               {vehicles.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">Nenhum veículo encontrado.</div>
               ) : (
-              <ul className="divide-y divide-gray-200">
-                {vehicles.map((vehicle) => (
-                  <li key={vehicle.id}>
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <Truck className="h-8 w-8 text-gray-400" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{vehicle.brand} {vehicle.model}</div>
-                            <div className="text-sm text-gray-500">{vehicle.year} • {vehicle.plate}</div>
+                <>
+                  <ul className="divide-y divide-gray-200">
+                    {vehicles.slice(0, visibleVehicles).map((vehicle) => (
+                      <li key={vehicle.id}>
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0">
+                                <Truck className="h-8 w-8 text-gray-400" />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">{vehicle.brand} {vehicle.model}</div>
+                                <div className="text-sm text-gray-500">{vehicle.year} • {vehicle.plate}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-24 flex-shrink-0">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                  vehicle.status === 'available' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : vehicle.status === 'rented'
+                                    ? 'bg-pink-100 text-pink-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {vehicle.status === 'available' ? 'Disponível' : 
+                                   vehicle.status === 'rented' ? 'Locado' : 
+                                   vehicle.status === 'maintenance' ? 'Manutenção' : 'Indisponível'}
+                                </span>
+                              </div>
+                              <div className="w-32 flex-shrink-0 ml-4">
+                                <div className="text-sm font-medium text-gray-900">R$ {Number(vehicle.daily_rate).toFixed(2)}/dia</div>
+                                <div className="text-sm text-gray-500">{vehicle.category}</div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => openEditModal(vehicle)}
+                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Editar veículo"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteVehicle(vehicle.id)}
+                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Excluir veículo"
+                                >
+                                  {deletingVehicle === vehicle.id ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${vehicle.is_available ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {vehicle.is_available ? 'Disponível' : 'Indisponível'}
-                          </span>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900">R$ {Number(vehicle.daily_rate).toFixed(2)}/dia</div>
-                            <div className="text-sm text-gray-500">{vehicle.category}</div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => openEditModal(vehicle)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                              title="Editar veículo"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteVehicle(vehicle.id)}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                              title="Excluir veículo"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {/* Botão para carregar mais veículos */}
+                  {visibleVehicles < vehicles.length && (
+                    <div className="flex justify-center py-4">
+                      <button
+                        onClick={() => setVisibleVehicles(prev => Math.min(prev + 5, vehicles.length))}
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                      >
+                        Carregar Mais ({vehicles.length - visibleVehicles} restantes)
+                      </button>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1492,7 +1848,7 @@ export default function AdminPage() {
                         type="file"
                         multiple
                         accept="image/*"
-                        onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
+                        onChange={handlePhotoUpload}
                         className="hidden"
                         id="vehicle-photo-upload"
                         disabled={uploadingPhotos}
@@ -1529,20 +1885,38 @@ export default function AdminPage() {
                   </div>
 
                   {/* Galeria de fotos */}
+                  {uploadingPhotos && (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-2"></div>
+                      <span className="text-sm text-gray-600">Processando fotos...</span>
+                    </div>
+                  )}
                   {vehiclePhotos.length > 0 ? (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
-                        📷 Fotos Selecionadas ({vehiclePhotos.length})
-                      </h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-700">
+                          📷 Fotos Selecionadas ({vehiclePhotos.length})
+                        </h4>
+                        {vehiclePhotos.length > 1 && (
+                          <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            ⌨️ Use ← → para navegar
+                          </div>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {vehiclePhotos.map((photo, index) => (
-                          <div key={photo.id} className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden">
+                          <div key={`photo-${photo.id}-${index}`} className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden">
                             <img
                               src={photo.dataUrl || `/api/images/${photo.id}`}
                               alt={photo.image_name || `Foto ${index + 1}`}
                               className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              loading="lazy"
                               onClick={() => setPrimaryPhoto(index)}
                               title={photo.is_primary ? "Foto principal (clique para alterar)" : "Clique para definir como principal"}
+                              onError={(e) => {
+                                console.error('Erro ao carregar imagem:', photo.dataUrl)
+                                e.currentTarget.src = '/placeholder-image.jpg'
+                              }}
                             />
                             <div className="absolute top-2 left-2">
                               {photo.is_primary ? (
@@ -1603,10 +1977,17 @@ export default function AdminPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={creating}
+                    disabled={updatingVehicle === editingVehicle?.id}
                     className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
                   >
-                    {creating ? 'Salvando...' : 'Salvar Alterações'}
+                    {updatingVehicle === editingVehicle?.id ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {updateProgress || 'Salvando...'}
+                      </div>
+                    ) : (
+                      'Salvar Alterações'
+                    )}
                   </button>
                 </div>
               </form>

@@ -12,12 +12,20 @@ export async function PUT(
     // Remover campos que não devem ser atualizados
     const { id: _, created_at, updated_at, ...updateData } = body
     
+    // Filtrar apenas campos que realmente mudaram (otimização)
+    const fieldsToUpdate: any = {}
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== undefined && updateData[key] !== null) {
+        fieldsToUpdate[key] = updateData[key]
+      }
+    })
+    
+    // Sempre atualizar o timestamp
+    fieldsToUpdate.updated_at = new Date().toISOString()
+    
     const { data: vehicle, error } = await supabase
       .from('vehicles')
-      .update({
-        ...updateData,
-        updated_at: new Date().toISOString()
-      })
+      .update(fieldsToUpdate)
       .eq('id', id)
       .select()
       .single()
@@ -36,6 +44,7 @@ export async function PUT(
         { status: 404 }
       )
     }
+
 
     return NextResponse.json({ vehicle })
   } catch (error) {
@@ -104,6 +113,7 @@ export async function GET(
         { status: 404 }
       )
     }
+
 
     return NextResponse.json({ vehicle })
   } catch (error) {
