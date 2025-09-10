@@ -44,7 +44,7 @@ CREATE TABLE public.vehicles (
 -- Tabela de orçamentos
 CREATE TABLE public.quotes (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  client_id UUID REFERENCES public.users(id),
+  client_id UUID REFERENCES public.users(id), -- Opcional para orçamentos anônimos
   client_name VARCHAR(255) NOT NULL,
   client_email VARCHAR(255) NOT NULL,
   client_phone VARCHAR(20) NOT NULL,

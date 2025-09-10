@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (vehicleError || !vehicle) {
+      console.error('Erro ao buscar veículo:', vehicleError)
       return NextResponse.json(
         { error: 'Veículo não encontrado' },
         { status: 404 }
@@ -87,12 +88,22 @@ export async function POST(request: NextRequest) {
       totalCost = totalDays * vehicle.daily_rate
     }
 
+    // Preparar dados do orçamento (client_id é opcional para orçamentos anônimos)
     const quoteData = {
-      ...body,
+      client_id: body.client_id || null, // Permite orçamentos sem usuário logado
+      client_name: body.client_name,
+      client_email: body.client_email,
+      client_phone: body.client_phone,
+      vehicle_id: body.vehicle_id,
+      start_date: body.start_date,
+      end_date: body.end_date,
       total_days: totalDays,
       total_cost: totalCost,
-      status: 'pending'
+      status: 'pending',
+      message: body.message || null
     }
+
+    console.log('Criando orçamento com dados:', quoteData)
 
     const { data: quote, error } = await supabase
       .from('quotes')
@@ -103,7 +114,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Erro ao criar orçamento:', error)
       return NextResponse.json(
-        { error: 'Erro ao criar orçamento' },
+        { error: `Erro ao criar orçamento: ${error.message}` },
         { status: 500 }
       )
     }

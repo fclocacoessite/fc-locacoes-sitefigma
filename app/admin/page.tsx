@@ -25,6 +25,7 @@ import {
   Mail,
   MapPin
 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type AdminVehicle = {
   id: string
@@ -223,49 +224,20 @@ export default function AdminPage() {
       const vehiclesJson = await vehiclesRes.json()
       setVehicles(vehiclesJson?.vehicles || [])
       
-      // Carregar quotes em background (menos crítico)
-      setTimeout(async () => {
-        try {
-          const quotesRes = await fetch('/api/quotes')
-          // Quotes são mockados por enquanto
-        } catch (error) {
-          console.warn('Erro ao carregar quotes:', error)
+      // Carregar quotes da API
+      try {
+        const quotesRes = await fetch('/api/quotes')
+        if (quotesRes.ok) {
+          const quotesData = await quotesRes.json()
+          setQuotes(quotesData.quotes || [])
+        } else {
+          console.warn('Erro ao carregar quotes:', quotesRes.status)
+          setQuotes([])
         }
-      }, 100)
-      
-      // Mock quotes data - em produção viria da API
-      setQuotes([
-        {
-          id: '1',
-          client_name: 'João Silva',
-          client_email: 'joao@empresa.com',
-          client_phone: '(11) 99999-9999',
-          vehicle_id: '1',
-          start_date: '2024-01-15',
-          end_date: '2024-01-20',
-          total_days: 5,
-          total_cost: 2500,
-          status: 'pending',
-          message: 'Preciso para obra em São Paulo',
-          created_at: '2024-01-10T10:00:00Z',
-          updated_at: '2024-01-10T10:00:00Z'
-        },
-        {
-          id: '2',
-          client_name: 'Maria Santos',
-          client_email: 'maria@construtora.com',
-          client_phone: '(11) 88888-8888',
-          vehicle_id: '2',
-          start_date: '2024-01-25',
-          end_date: '2024-01-30',
-          total_days: 5,
-          total_cost: 3200,
-          status: 'approved',
-          message: 'Trabalho em altura',
-          created_at: '2024-01-22T14:30:00Z',
-          updated_at: '2024-01-22T14:30:00Z'
-        }
-      ])
+      } catch (error) {
+        console.warn('Erro ao carregar quotes:', error)
+        setQuotes([])
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
     } finally {
@@ -763,11 +735,67 @@ export default function AdminPage() {
     })
   }
 
+  const fetchQuotes = async () => {
+    try {
+      const quotesRes = await fetch('/api/quotes')
+      if (quotesRes.ok) {
+        const quotesData = await quotesRes.json()
+        setQuotes(quotesData.quotes || [])
+      } else {
+        console.warn('Erro ao carregar quotes:', quotesRes.status)
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar quotes:', error)
+    }
+  }
+
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
-    // Em produção, faria uma chamada para a API
-    setQuotes(prev => prev.map(quote => 
-      quote.id === quoteId ? { ...quote, status: newStatus as any } : quote
-    ))
+    try {
+      const response = await fetch(`/api/quotes/${quoteId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (response.ok) {
+        setQuotes(prev => prev.map(quote => 
+          quote.id === quoteId ? { ...quote, status: newStatus as any } : quote
+        ))
+        alert(`Orçamento ${newStatus === 'approved' ? 'aprovado' : 'rejeitado'} com sucesso!`)
+      } else {
+        const error = await response.json()
+        alert(`Erro ao atualizar orçamento: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status do orçamento:', error)
+      alert('Erro ao atualizar orçamento. Tente novamente.')
+    }
+  }
+
+  const handleDeleteQuote = async (quoteId: string, clientName: string) => {
+    if (!confirm('Tem certeza que deseja excluir este orçamento?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/quotes/${quoteId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // Remover o orçamento da lista
+        setQuotes(prev => prev.filter(quote => quote.id !== quoteId))
+        alert('Orçamento excluído com sucesso!')
+      } else {
+        const error = await response.json()
+        alert(`Erro ao excluir orçamento: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Erro ao excluir orçamento:', error)
+      alert('Erro ao excluir orçamento. Tente novamente.')
+    }
   }
 
   // Funções para gerenciar os textos do top bar
@@ -1340,26 +1368,44 @@ export default function AdminPage() {
                                 <div className="text-sm text-gray-500">{vehicle.category}</div>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => openEditModal(vehicle)}
-                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
-                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Editar veículo"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteVehicle(vehicle.id)}
-                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
-                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Excluir veículo"
-                                >
-                                  {deletingVehicle === vehicle.id ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </button>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => openEditModal(vehicle)}
+                                        disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Editar veículo"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Editar veículo
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => handleDeleteVehicle(vehicle.id)}
+                                        disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Excluir veículo"
+                                      >
+                                        {deletingVehicle === vehicle.id ? (
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                        ) : (
+                                          <Trash2 className="h-4 w-4" />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Excluir veículo
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </div>
                           </div>
@@ -1387,10 +1433,30 @@ export default function AdminPage() {
           {activeTab === 'quotes' && (
             <div className="bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Orçamentos</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Orçamentos</h3>
+                  <div className="flex space-x-2">
+                    <span className="text-sm text-gray-500">
+                      Total: {quotes.length} orçamentos
+                    </span>
+                    <button
+                      onClick={() => {
+                        // Recarregar orçamentos
+                        fetchQuotes()
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-900"
+                    >
+                      Atualizar
+                    </button>
+                  </div>
+                </div>
               </div>
               {quotes.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">Nenhum orçamento encontrado.</div>
+                <div className="p-6 text-center text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Nenhum orçamento encontrado.</p>
+                  <p className="text-sm mt-2">Os orçamentos aparecerão aqui quando forem solicitados pelo site.</p>
+                </div>
               ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -1398,6 +1464,9 @@ export default function AdminPage() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Cliente
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Veículo
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Período
@@ -1409,55 +1478,133 @@ export default function AdminPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ações
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {quotes.map((quote) => (
-                      <tr key={quote.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {quote.client_name}
+                    {quotes.map((quote) => {
+                      const vehicle = vehicles.find(v => v.id === quote.vehicle_id)
+                      return (
+                        <tr key={quote.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {quote.client_name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {quote.client_email}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {quote.client_phone}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Veículo não encontrado'}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {quote.client_email}
+                              {vehicle ? vehicle.plate : ''}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(quote.start_date).toLocaleDateString('pt-BR')} - {new Date(quote.end_date).toLocaleDateString('pt-BR')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          R$ {quote.total_cost.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(quote.status)}`}>
-                            {getStatusText(quote.status)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button 
-                            onClick={() => handleQuoteStatusUpdate(quote.id, 'approved')}
-                            className="text-green-600 hover:text-green-900"
-                            title="Aprovar"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleQuoteStatusUpdate(quote.id, 'rejected')}
-                            className="text-red-600 hover:text-red-900"
-                            title="Rejeitar"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                          <button className="text-blue-600 hover:text-blue-900" title="Visualizar">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>{new Date(quote.start_date).toLocaleDateString('pt-BR')}</div>
+                            <div>até {new Date(quote.end_date).toLocaleDateString('pt-BR')}</div>
+                            <div className="text-xs text-gray-400">
+                              ({quote.total_days} dias)
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                            R$ {quote.total_cost.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(quote.status)}`}>
+                              {getStatusText(quote.status)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(quote.created_at).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            {quote.status === 'pending' && (
+                              <>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        onClick={() => handleQuoteStatusUpdate(quote.id, 'approved')}
+                                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                                        aria-label="Aprovar"
+                                      >
+                                        <CheckCircle className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Aprovar
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        onClick={() => handleQuoteStatusUpdate(quote.id, 'rejected')}
+                                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                                        aria-label="Rejeitar"
+                                      >
+                                        <XCircle className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Rejeitar
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </>
+                            )}
+                            <TooltipProvider>
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors" 
+                                    onClick={() => {
+                                      // Mostrar modal com detalhes do orçamento
+                                      alert(`Detalhes do Orçamento:\n\nCliente: ${quote.client_name}\nEmail: ${quote.client_email}\nTelefone: ${quote.client_phone}\nVeículo: ${vehicle ? `${vehicle.brand} ${vehicle.model}` : 'N/A'}\nPeríodo: ${new Date(quote.start_date).toLocaleDateString('pt-BR')} até ${new Date(quote.end_date).toLocaleDateString('pt-BR')}\nDias: ${quote.total_days}\nValor: R$ ${quote.total_cost.toFixed(2)}\nStatus: ${getStatusText(quote.status)}\nMensagem: ${quote.message || 'Nenhuma mensagem'}`)
+                                    }}
+                                    aria-label="Visualizar detalhes"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                  Visualizar detalhes
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    onClick={() => handleDeleteQuote(quote.id, quote.client_name)}
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors" 
+                                    aria-label="Excluir orçamento"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                  Excluir orçamento
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

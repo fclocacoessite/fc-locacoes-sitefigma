@@ -67,7 +67,7 @@ enum UserRole {
 // Perfil completo do cliente com dados de segurança
 model ClientProfile {
   id                    String   @id @default(cuid())
-  userId                String   @unique // Referência ao auth.users do Supabase
+  user_id               String   @unique // Referência ao auth.users do Supabase
   email                 String   @unique
   name                  String
   role                  UserRole  @default(CLIENT)
@@ -76,37 +76,37 @@ model ClientProfile {
   cpf                   String?  @unique // CPF para pessoa física
   cnpj                  String?  @unique // CNPJ para pessoa jurídica
   phone                 String
-  birthDate             DateTime?
+  birth_date            DateTime?
   
   // Endereço completo
   address               String
   city                  String
   state                 String
-  zipCode               String
+  zip_code              String
   country               String   @default("Brasil")
   
   // Documentos de identidade
   rg                    String?
   cnh                   String?
-  cnhExpiry             DateTime?
+  cnh_expiry            DateTime?
   
   // Comprovantes
-  proofOfResidence      String? // URL do arquivo
-  proofOfIncome         String? // URL do arquivo
-  companyDocuments      String? // URL dos documentos da empresa
+  proof_of_residence    String? // URL do arquivo
+  proof_of_income       String? // URL do arquivo
+  company_documents     String? // URL dos documentos da empresa
   
   // Status de verificação
-  isVerified            Boolean  @default(false)
-  verificationDate      DateTime?
-  verifiedBy            String?
+  is_verified           Boolean  @default(false)
+  verification_date     DateTime?
+  verified_by           String?
   
   // Dados adicionais
-  emergencyContact      String?
-  emergencyPhone        String?
+  emergency_contact     String?
+  emergency_phone       String?
   notes                 String?
   
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
   
   // Relacionamentos
   quotes                Quote[]
@@ -118,43 +118,47 @@ model ClientProfile {
 }
 
 model Vehicle {
-  id          String   @id @default(cuid())
-  brand       String
-  model       String
-  year        Int
-  plate       String   @unique
-  category    String
-  dailyRate   Float
-  weeklyRate  Float?
-  monthlyRate Float?
-  isAvailable Boolean  @default(true)
-  imageUrl    String?
-  description String?
-  features    String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  brand        String
+  model        String
+  year         Int
+  plate        String   @unique
+  category     String
+  daily_rate   Float
+  weekly_rate  Float?
+  monthly_rate Float?
+  is_available Boolean  @default(true)
+  image_url    String?
+  description  String?
+  features     String[]
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
   
   // Relacionamentos
-  quotes     Quote[]
-  contracts  Contract[]
+  quotes       Quote[]
+  contracts    Contract[]
 }
 
 model Quote {
-  id        String   @id @default(cuid())
-  clientId  String
-  vehicleId String
-  startDate DateTime
-  endDate   DateTime
-  totalDays Int
-  totalCost Float
-  status    QuoteStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  client_id   String?  // Opcional para orçamentos anônimos
+  client_name String   // Nome do cliente (obrigatório)
+  client_email String  // Email do cliente (obrigatório)
+  client_phone String  // Telefone do cliente (obrigatório)
+  vehicle_id  String
+  start_date  DateTime
+  end_date    DateTime
+  total_days  Int
+  total_cost  Float
+  status      QuoteStatus @default(PENDING)
+  message     String?  // Mensagem opcional do cliente
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
   
   // Relacionamentos
-  client    ClientProfile @relation(fields: [clientId], references: [id])
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
-  contract  Contract?
+  client      ClientProfile? @relation(fields: [client_id], references: [id])
+  vehicle     Vehicle @relation(fields: [vehicle_id], references: [id])
+  contract    Contract?
 }
 
 enum QuoteStatus {
@@ -165,21 +169,21 @@ enum QuoteStatus {
 }
 
 model Contract {
-  id        String   @id @default(cuid())
-  quoteId   String  @unique // Um contrato por orçamento
-  clientId  String
-  vehicleId String
-  startDate DateTime
-  endDate   DateTime
-  totalCost Float
-  status    ContractStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  quote_id   String  @unique // Um contrato por orçamento
+  client_id  String
+  vehicle_id String
+  start_date DateTime
+  end_date   DateTime
+  total_cost Float
+  status     ContractStatus @default(ACTIVE)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   
   // Relacionamentos
-  client    ClientProfile @relation(fields: [clientId], references: [id])
-  quote     Quote @relation(fields: [quoteId], references: [id])
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  client     ClientProfile @relation(fields: [client_id], references: [id])
+  quote      Quote @relation(fields: [quote_id], references: [id])
+  vehicle    Vehicle @relation(fields: [vehicle_id], references: [id])
 }
 
 enum ContractStatus {

@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para sliders personalizados */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-webkit-slider-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-moz-range-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -71,45 +106,45 @@
   }
 }
 
-/* Custom utilities for FC Locações */
+/* Custom utilities for FC Locações - Valores diretos para maior estabilidade */
 @layer utilities {
   .fc-orange {
-    background-color: hsl(var(--fc-orange));
+    background-color: #FF5722;
   }
   
   .fc-dark-gray {
-    background-color: hsl(var(--fc-dark-gray));
+    background-color: #1E1E1E;
   }
   
   .fc-light-gray {
-    background-color: hsl(var(--fc-light-gray));
+    background-color: #F5F5F5;
   }
   
   .text-fc-orange {
-    color: hsl(var(--fc-orange));
+    color: #FF5722;
   }
   
   .text-fc-dark-gray {
-    color: hsl(var(--fc-dark-gray));
+    color: #1E1E1E;
   }
   
   .text-fc-medium-gray {
-    color: hsl(var(--fc-medium-gray));
+    color: #B3B3B3;
   }
   
   .border-fc-orange {
-    border-color: hsl(var(--fc-orange));
+    border-color: #FF5722;
   }
   
   .hover\:border-fc-orange:hover {
-    border-color: hsl(var(--fc-orange));
+    border-color: #FF5722;
   }
   
   .hover\:bg-fc-orange:hover {
-    background-color: hsl(var(--fc-orange));
+    background-color: #FF5722;
   }
   
   .focus\:ring-fc-orange:focus {
-    --tw-ring-color: hsl(var(--fc-orange));
+    --tw-ring-color: #FF5722;
   }
 } 

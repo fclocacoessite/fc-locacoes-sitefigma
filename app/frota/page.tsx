@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Vehicle } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
 import { Footer } from '@/components/Footer'
+import { FleetSearchFilter } from '@/components/FleetSearchFilter'
 
 // Array de veículos com imagens locais e descrições detalhadas
 const localVehicles = [
@@ -156,40 +157,43 @@ const localVehicles = [
 
 export default function FrotaPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imagesLoaded, setImagesLoaded] = useState(0)
+  const [showAllVehicles, setShowAllVehicles] = useState(false)
+  const vehiclesGridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
         setLoading(true)
         
-        // Usar cache inteligente para melhor performance
-        const response = await fetch('/api/vehicles', {
-          cache: 'no-store', // Não usar cache para garantir dados atualizados
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        })
+        // Buscar veículos utilizando o cache do endpoint para melhor performance
+        const response = await fetch('/api/vehicles')
         
         if (response.ok) {
           const data = await response.json()
           console.log('📡 Dados recebidos da API:', data.vehicles?.length || 0, 'veículos')
           console.log('🖼️ Primeiro veículo com fotos:', data.vehicles?.[0]?.photos?.length || 0, 'fotos')
-          setVehicles(data.vehicles || [])
+          const vehiclesData = data.vehicles || []
+          setVehicles(vehiclesData)
+          setFilteredVehicles(vehiclesData)
         } else {
           console.error('❌ Erro ao buscar veículos:', response.statusText)
           console.log('🔄 Usando dados locais como fallback...')
           // Fallback para dados locais em caso de erro
           setVehicles(localVehicles)
+          setFilteredVehicles(localVehicles)
         }
       } catch (error) {
         console.error('Erro ao buscar veículos:', error)
         // Fallback para dados locais em caso de erro
         setVehicles(localVehicles)
+        setFilteredVehicles(localVehicles)
       } finally {
         setLoading(false)
       }
@@ -198,26 +202,29 @@ export default function FrotaPage() {
     fetchVehicles()
   }, [])
 
-  // Memoizar filtros para melhor performance
-  const filteredVehicles = useMemo(() => {
-    return vehicles.filter(vehicle => {
-      if (filter === 'all') return true
-      if (filter === 'munck') return vehicle.category.toLowerCase().includes('munck')
-      if (filter === 'cesto') return vehicle.category.toLowerCase().includes('cesto')
-      if (filter === 'caminhão') return vehicle.category.toLowerCase().includes('3/4')
-      return true
-    })
-  }, [vehicles, filter])
+  // Callbacks para o componente de filtro
+  const handleFilteredVehicles = useCallback((vehicles: Vehicle[]) => {
+    setFilteredVehicles(vehicles)
+  }, [])
+
+  const handleSearchTerm = useCallback((term: string) => {
+    setSearchTerm(term)
+  }, [])
 
   // Paginação para melhor performance
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = showAllVehicles ? 6 : 3
   const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage)
   const paginatedVehicles = useMemo(() => {
+    if (!showAllVehicles) {
+      // Mostrar apenas os primeiros 3 veículos quando não estiver mostrando todos
+      return filteredVehicles.slice(0, 3)
+    }
     const startIndex = (currentPage - 1) * itemsPerPage
     return filteredVehicles.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredVehicles, currentPage, itemsPerPage])
+  }, [filteredVehicles, currentPage, itemsPerPage, showAllVehicles])
 
+  // Categorias para filtros rápidos (mantidas para compatibilidade)
   const categories = [
     { key: 'all', label: 'Todos' },
     { key: 'munck', label: 'Caminhões Munck' },
@@ -245,6 +252,16 @@ export default function FrotaPage() {
   // Callback para rastrear carregamento de imagens
   const handleImageLoad = useCallback(() => {
     setImagesLoaded(prev => prev + 1)
+  }, [])
+
+  // Função para scroll suave até os cards
+  const scrollToVehicles = useCallback(() => {
+    if (vehiclesGridRef.current) {
+      vehiclesGridRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
   }, [])
 
 
@@ -297,22 +314,13 @@ export default function FrotaPage() {
 
       {/* Main Content */}
       <div className="flex-grow">
-        {/* Filtros */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {categories.map((category) => (
-            <button
-              key={category.key}
-              onClick={() => setFilter(category.key)}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === category.key
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600 border border-gray-300'
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
+        {/* Filtros de Busca */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <FleetSearchFilter
+            vehicles={vehicles}
+            onFilteredVehicles={handleFilteredVehicles}
+            onSearchTerm={handleSearchTerm}
+          />
         </div>
 
         {/* Loading */}
@@ -324,15 +332,22 @@ export default function FrotaPage() {
 
         {/* Grid de Veículos */}
         {!loading && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {paginatedVehicles.map((vehicle) => (
-              <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden border hover:shadow-xl transition-shadow flex flex-col h-full">
+          <>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div ref={vehiclesGridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {paginatedVehicles.map((vehicle) => (
+              <div key={vehicle.id} className="bg-white rounded-xl shadow-lg overflow-hidden border hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
                 <div className="relative h-48">
                   <img
-                    src={vehicle.photos?.[0] || 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                    src={vehicle.photos?.[0] ? encodeURI(vehicle.photos[0]) : 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={`${vehicle.brand} ${vehicle.model} - ${vehicle.category}`}
                     className="w-full h-full object-cover cursor-pointer"
                     loading="lazy"
+                    decoding="async"
+                    fetchpriority="low"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    width={800}
+                    height={384}
                     onLoad={(e) => {
                       console.log('✅ Imagem carregada com sucesso:', vehicle.photos?.[0])
                       handleImageLoad()
@@ -377,7 +392,7 @@ export default function FrotaPage() {
                   )}
                 </div>
                 
-                <div className="p-6 flex flex-col flex-grow">
+                <div className="p-5 lg:p-6 flex flex-col flex-grow">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-gray-900">
                       {vehicle.brand} {vehicle.model}
@@ -394,26 +409,26 @@ export default function FrotaPage() {
                   </p>
                   
                   {/* Especificações */}
-                  <div className="mb-4 space-y-1">
+                  <div className="mb-5 space-y-2">
                     {vehicle.capacity_ton && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Capacidade:</span>
-                        <span className="font-medium">{vehicle.capacity_ton}t</span>
+                        <span className="font-medium text-gray-900">{vehicle.capacity_ton}t</span>
                       </div>
                     )}
                     {vehicle.height_m && (
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Altura:</span>
-                        <span className="font-medium">{vehicle.height_m}m</span>
+                        <span className="font-medium text-gray-900">{vehicle.height_m}m</span>
                       </div>
                     )}
                   </div>
                   
                   {/* Features */}
-                  <div className="mb-4 flex-grow">
+                  <div className="mb-5 flex-grow">
                     <div className="flex flex-wrap gap-2">
                       {vehicle.features?.map((feature, index) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                        <span key={index} className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-md border border-orange-200">
                           {feature}
                         </span>
                       ))}
@@ -438,12 +453,43 @@ export default function FrotaPage() {
                 </div>
               </div>
             ))}
-          </div>
+              </div>
+            </div>
+
+            {/* Botão Ver Todos */}
+            {!showAllVehicles && filteredVehicles.length > 3 && (
+              <div className="text-center mt-10 mb-4">
+                <button
+                  onClick={() => setShowAllVehicles(true)}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105"
+                >
+                  Ver Todos os Veículos ({filteredVehicles.length})
+                </button>
+              </div>
+            )}
+
+            {/* Botão Ver Menos */}
+            {showAllVehicles && filteredVehicles.length > 3 && (
+              <div className="text-center mt-10 mb-4">
+                <button
+                  onClick={() => {
+                    setShowAllVehicles(false)
+                    // Scroll suave até os cards após um pequeno delay para garantir que o estado foi atualizado
+                    setTimeout(scrollToVehicles, 100)
+                  }}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-10 py-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-md"
+                >
+                  Ver Menos
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Controles de Paginação */}
-        {!loading && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-8">
+        {!loading && showAllVehicles && totalPages > 1 && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-center items-center gap-4 mt-8">
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
@@ -475,15 +521,40 @@ export default function FrotaPage() {
             >
               Próxima
             </button>
+            </div>
           </div>
         )}
 
         {/* Nenhum veículo encontrado */}
         {!loading && filteredVehicles.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              Nenhum veículo encontrado para o filtro selecionado.
-            </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center py-12">
+              <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nenhum veículo encontrado
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm 
+                  ? `Não encontramos veículos para "${searchTerm}". Tente ajustar os filtros ou usar termos diferentes.`
+                  : 'Nenhum veículo corresponde aos filtros selecionados. Tente ajustar os critérios de busca.'
+                }
+              </p>
+              <button
+                onClick={() => {
+                  setSearchTerm('')
+                  setFilteredVehicles(vehicles)
+                }}
+                className="text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Limpar filtros e ver todos os veículos
+              </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -513,9 +584,12 @@ export default function FrotaPage() {
             
             <div className="relative p-4">
               <img
-                src={selectedVehicle.photos[currentImageIndex]}
+                src={encodeURI(selectedVehicle.photos[currentImageIndex])}
                 alt={`${selectedVehicle.brand} ${selectedVehicle.model} - Imagem ${currentImageIndex + 1}`}
                 className="w-full h-96 object-contain rounded"
+                decoding="async"
+                fetchpriority="low"
+                sizes="(max-width: 1024px) 100vw, 1024px"
                 onError={(e) => {
                   console.error('Erro ao carregar imagem no modal:', selectedVehicle.photos[currentImageIndex])
                   e.currentTarget.src = 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
@@ -569,7 +643,7 @@ export default function FrotaPage() {
       )}
 
       {/* CTA Section */}
-      <div className="bg-orange-500 py-16">
+      <div className="bg-orange-500 py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Não encontrou o que precisa?
@@ -592,7 +666,6 @@ export default function FrotaPage() {
             </a>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Footer */}
