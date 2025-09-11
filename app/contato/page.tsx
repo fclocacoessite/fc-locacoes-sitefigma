@@ -1,7 +1,8 @@
 'use client'
 
-import { MobileHeader } from '@/components/MobileHeader'
+import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
+import { AdminFloatingButton } from '@/components/AdminFloatingButton'
 import { 
   Phone, 
   Mail, 
@@ -75,7 +76,7 @@ export default function ContatoPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MobileHeader />
+      <ResponsiveHeader />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-16">
@@ -315,6 +316,9 @@ export default function ContatoPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Floating Button */}
+      <AdminFloatingButton />
 
       {/* Footer */}
       <Footer />

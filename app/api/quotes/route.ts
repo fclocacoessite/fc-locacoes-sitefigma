@@ -80,6 +80,8 @@ export async function POST(request: NextRequest) {
     let totalCost = 0
     if (totalDays >= 30 && vehicle.monthly_rate) {
       const months = Math.ceil(totalDays / 30)
+
+      
       totalCost = months * vehicle.monthly_rate
     } else if (totalDays >= 7 && vehicle.weekly_rate) {
       const weeks = Math.ceil(totalDays / 7)

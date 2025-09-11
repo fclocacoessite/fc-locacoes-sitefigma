@@ -1,7 +1,8 @@
 'use client'
 
 import { Footer } from '@/components/Footer'
-import { MobileHeader } from '@/components/MobileHeader'
+import { ResponsiveHeader } from '@/components/ResponsiveHeader'
+import { AdminFloatingButton } from '@/components/AdminFloatingButton'
 import { 
   Users, 
   Award, 
@@ -101,7 +102,7 @@ export default function SobrePage() {
 
   const milestones = [
     {
-      year: '2014',
+      year: '2018',
       title: 'Fundação da Empresa',
       description: 'Início das operações com 5 veículos na frota.'
     },
@@ -134,7 +135,7 @@ export default function SobrePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <MobileHeader />
+      <ResponsiveHeader />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-600 to-orange-700 text-white">
@@ -145,7 +146,7 @@ export default function SobrePage() {
               Sobre a FC Locações
             </h1>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto">
-              Uma década de excelência em locação de veículos e equipamentos para construção e logística
+              Anos de excelência em locação de veículos e equipamentos para construção e logística
             </p>
           </div>
         </div>
@@ -159,7 +160,7 @@ export default function SobrePage() {
               Nossa História
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Desde 2014, a FC Locações tem sido sinônimo de confiança e qualidade no setor de locação de veículos e equipamentos.
+              Desde 2018, a FC Locações tem sido sinônimo de confiança e qualidade no setor de locação de veículos e equipamentos.
             </p>
           </div>
 
@@ -437,6 +438,9 @@ export default function SobrePage() {
           </div>
         </div>
       </section>
+
+      {/* Admin Floating Button */}
+      <AdminFloatingButton />
 
       {/* Footer */}
       <Footer />

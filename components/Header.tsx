@@ -3,10 +3,34 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 
 export function Header() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
   const { user, session, signOut } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Detectar tipos de usuário
+  const isAdmin = !!user && (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager')
+  const isClient = !!user && user.user_metadata?.role === 'client'
+
+  // Redirecionamentos baseados no tipo de usuário
+  useEffect(() => {
+    if (!session || !user) return
+
+    // Se for admin e estiver em página institucional, redireciona para /admin
+    if (isAdmin && !pathname.startsWith('/admin')) {
+      router.replace('/admin')
+      return
+    }
+
+    // Se for cliente e tentar acessar /admin, redireciona para /
+    if (isClient && pathname.startsWith('/admin')) {
+      router.replace('/')
+      return
+    }
+  }, [session, user, isAdmin, isClient, pathname, router])
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -26,11 +50,13 @@ export function Header() {
     return () => clearInterval(interval)
   }, [topBarInfo.length])
 
-  const navigation = [
+  // Navegação só aparece para não-admins
+  const navigation = isAdmin ? [] : [
     { name: 'Início', href: '/' },
+    { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
     { name: 'Orçamento', href: '/orcamento' },
-    { name: 'Contato', href: '#contato' },
+    { name: 'Contato', href: '/contato' },
   ]
 
   const getIcon = (iconName: string) => {
@@ -99,7 +125,7 @@ export function Header() {
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
                   
                   {/* Botão para Admin se for admin/manager */}
-                  {(user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager') && (
+                  {isAdmin && (
                     <Link href="/admin">
                       <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
                         Admin
@@ -107,12 +133,14 @@ export function Header() {
                     </Link>
                   )}
                   
-                  {/* Botão Área do Cliente */}
-                  <Link href="/portal-cliente">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
-                      Portal
-                    </button>
-                  </Link>
+                  {/* Botão Área do Cliente - só para não-admins */}
+                  {!isAdmin && (
+                    <Link href="/portal-cliente">
+                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
+                        Portal
+                      </button>
+                    </Link>
+                  )}
                   
                   <button
                     onClick={() => signOut()}
@@ -145,7 +173,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex-shrink-0 flex items-center space-x-3">
+            <a href={isAdmin ? "/admin" : "/"} className="flex-shrink-0 flex items-center space-x-3">
               <img 
                 src="/logo-fc.jpg" 
                 alt="FC Locações" 
@@ -158,27 +186,51 @@ export function Header() {
             </a>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
-              >
-                {item.name}
-              </a>
-            ))}
-          </nav>
+          {/* Desktop Navigation - só para não-admins */}
+          {!isAdmin && (
+            <nav className="hidden md:flex space-x-8">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </nav>
+          )}
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            {!isAdmin && (
+              <a
+                href="/orcamento"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Solicitar Orçamento
+              </a>
+            )}
+            
             <a
               href="/consignacao"
               className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Consignar Veículo
             </a>
+            
+            {/* Botão de Login Admin - sempre visível para não-logados */}
+            {!session && (
+              <a
+                href="/admin/login"
+                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Admin</span>
+              </a>
+            )}
           </div>
         </div>
       </div>

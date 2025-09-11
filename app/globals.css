@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Breakpoints customizados para responsividade */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Animações suaves para o header */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.header-animate {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* Melhorias para mobile */
+@media (max-width: 640px) {
+  .mobile-text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .mobile-space-x-1 {
+    gap: 0.25rem;
+  }
+}
+
 /* Estilos para sliders personalizados */
 .slider::-webkit-slider-thumb {
   appearance: none;
