@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -26,9 +26,112 @@ import {
 } from 'lucide-react';
 import { SiteSettings } from './SiteSettings';
 
+interface Consignment {
+  id: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  brand: string;
+  model: string;
+  year: number;
+  category: string;
+  capacity?: string;
+  condition: string;
+  mileage?: string;
+  price?: string;
+  daily_rate: number;
+  description?: string;
+  photos: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_at: string;
+  created_at: string;
+  updated_at: string;
+  approved_at?: string;
+  rejected_at?: string;
+  rejection_reason?: string;
+  admin_notes?: string;
+}
+
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [consignments, setConsignments] = useState<Consignment[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Buscar consignações da API
+  const fetchConsignments = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/consignment');
+      if (response.ok) {
+        const data = await response.json();
+        setConsignments(data.consignments || []);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar consignações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Aprovar consignação
+  const approveConsignment = async (id: string) => {
+    try {
+      const response = await fetch(`/api/consignment/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'approved' })
+      });
+
+      if (response.ok) {
+        await fetchConsignments(); // Recarregar lista
+        alert('Consignação aprovada com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao aprovar consignação:', error);
+      alert('Erro ao aprovar consignação');
+    }
+  };
+
+  // Rejeitar consignação
+  const rejectConsignment = async (id: string) => {
+    const reason = prompt('Motivo da rejeição (opcional):');
+    
+    try {
+      const response = await fetch(`/api/consignment/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          status: 'rejected',
+          rejection_reason: reason || null
+        })
+      });
+
+      if (response.ok) {
+        await fetchConsignments(); // Recarregar lista
+        alert('Consignação rejeitada com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao rejeitar consignação:', error);
+      alert('Erro ao rejeitar consignação');
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'consignment') {
+      fetchConsignments();
+    }
+  }, [activeTab]);
 
   // Mock data for dashboard
   const dashboardStats = [
@@ -100,39 +203,6 @@ export function AdminPanel() {
     }
   ];
 
-  // Mock consignment data
-  const consignmentData = [
-    {
-      id: 'CON-001',
-      owner: 'João Silva',
-      vehicle: 'Mercedes Atego 1719',
-      year: '2020',
-      submittedAt: '2024-01-15',
-      status: 'pending',
-      price: 'R$ 180.000',
-      category: 'Caminhão Munck'
-    },
-    {
-      id: 'CON-002',
-      owner: 'Maria Santos',
-      vehicle: 'Ford Cargo 1319',
-      year: '2019',
-      submittedAt: '2024-01-12',
-      status: 'approved',
-      price: 'R$ 120.000',
-      category: 'Caminhão 3/4'
-    },
-    {
-      id: 'CON-003',
-      owner: 'Carlos Lima',
-      vehicle: 'VW Constellation',
-      year: '2018',
-      submittedAt: '2024-01-10',
-      status: 'rejected',
-      price: 'R$ 95.000',
-      category: 'Transporte'
-    }
-  ];
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -343,6 +413,112 @@ export function AdminPanel() {
           <h3 className="text-xl font-semibold text-fc-dark-gray">Consignação de Veículos</h3>
           <p className="text-fc-medium-gray">Analise e aprove veículos enviados para consignação</p>
         </div>
+        <div className="flex space-x-2">
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={() => {
+              const pendingIds = consignments
+                .filter(item => item.status === 'pending')
+                .map(item => item.id);
+              if (pendingIds.length > 0) {
+                if (confirm(`Aprovar ${pendingIds.length} consignação(ões) pendente(s)?`)) {
+                  pendingIds.forEach(id => approveConsignment(id));
+                }
+              } else {
+                alert('Nenhuma consignação pendente para aprovar');
+              }
+            }}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Aprovar Pendentes
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-red-600 text-red-600 hover:bg-red-50"
+            onClick={() => {
+              const pendingIds = consignments
+                .filter(item => item.status === 'pending')
+                .map(item => item.id);
+              if (pendingIds.length > 0) {
+                if (confirm(`Rejeitar ${pendingIds.length} consignação(ões) pendente(s)?`)) {
+                  pendingIds.forEach(id => rejectConsignment(id));
+                }
+              } else {
+                alert('Nenhuma consignação pendente para rejeitar');
+              }
+            }}
+          >
+            <XCircle className="w-4 h-4 mr-2" />
+            Rejeitar Pendentes
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-fc-medium-gray">Pendentes</p>
+                <p className="text-2xl font-bold text-fc-dark-gray">
+                  {consignments.filter(item => item.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-fc-medium-gray">Aprovados</p>
+                <p className="text-2xl font-bold text-fc-dark-gray">
+                  {consignments.filter(item => item.status === 'approved').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-fc-medium-gray">Rejeitados</p>
+                <p className="text-2xl font-bold text-fc-dark-gray">
+                  {consignments.filter(item => item.status === 'rejected').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Truck className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-fc-medium-gray">Total</p>
+                <p className="text-2xl font-bold text-fc-dark-gray">
+                  {consignments.length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Consignment Table */}
@@ -350,53 +526,99 @@ export function AdminPanel() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="fc-dark-gray text-white">
+              <thead className="bg-fc-dark-gray text-white">
                 <tr>
+                  <th className="text-left p-4">
+                    <input type="checkbox" className="rounded" />
+                  </th>
                   <th className="text-left p-4">ID</th>
                   <th className="text-left p-4">Proprietário</th>
                   <th className="text-left p-4">Veículo</th>
-                  <th className="text-left p-4">Ano</th>
                   <th className="text-left p-4">Categoria</th>
+                  <th className="text-left p-4">Ano</th>
                   <th className="text-left p-4">Valor</th>
+                  <th className="text-left p-4">Diária</th>
                   <th className="text-left p-4">Data Envio</th>
                   <th className="text-left p-4">Status</th>
                   <th className="text-left p-4">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {consignmentData.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="p-4 font-medium text-fc-dark-gray">{item.id}</td>
-                    <td className="p-4 text-fc-dark-gray">{item.owner}</td>
-                    <td className="p-4 text-fc-dark-gray">{item.vehicle}</td>
-                    <td className="p-4 text-fc-medium-gray">{item.year}</td>
-                    <td className="p-4 text-fc-medium-gray">{item.category}</td>
-                    <td className="p-4 font-medium text-fc-orange">{item.price}</td>
-                    <td className="p-4 text-fc-medium-gray">{item.submittedAt}</td>
-                    <td className="p-4">
-                      <Badge className={getStatusColor(item.status)}>
-                        {getStatusText(item.status)}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="ghost" className="text-blue-600 hover:bg-blue-50">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        {item.status === 'pending' && (
-                          <>
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                {loading ? (
+                  <tr>
+                    <td colSpan={11} className="p-8 text-center text-fc-medium-gray">
+                      <Clock className="w-6 h-6 mx-auto mb-2 animate-spin" />
+                      Carregando consignações...
                     </td>
                   </tr>
-                ))}
+                ) : consignments.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="p-8 text-center text-fc-medium-gray">
+                      Nenhuma consignação encontrada
+                    </td>
+                  </tr>
+                ) : (
+                  consignments.map((item, index) => (
+                    <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="p-4">
+                        <input type="checkbox" className="rounded" />
+                      </td>
+                      <td className="p-4 font-medium text-fc-dark-gray">{item.id}</td>
+                      <td className="p-4">
+                        <div>
+                          <p className="font-medium text-fc-dark-gray">{item.owner_name}</p>
+                          <p className="text-sm text-fc-medium-gray">{item.email}</p>
+                          <p className="text-sm text-fc-medium-gray">{item.phone}</p>
+                        </div>
+                      </td>
+                      <td className="p-4 text-fc-dark-gray">{item.brand} {item.model}</td>
+                      <td className="p-4 text-fc-medium-gray">{item.category}</td>
+                      <td className="p-4 text-fc-medium-gray">{item.year}</td>
+                      <td className="p-4 font-medium text-fc-orange">{item.price || 'N/A'}</td>
+                      <td className="p-4 font-medium text-green-600">R$ {item.daily_rate}</td>
+                      <td className="p-4 text-fc-medium-gray">
+                        {new Date(item.submitted_at).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="p-4">
+                        <Badge className={getStatusColor(item.status)}>
+                          {getStatusText(item.status)}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-blue-600 hover:bg-blue-50"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          {item.status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => approveConsignment(item.id)}
+                                title="Aprovar consignação"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                onClick={() => rejectConsignment(item.id)}
+                                title="Rejeitar consignação"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

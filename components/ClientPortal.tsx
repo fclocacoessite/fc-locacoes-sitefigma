@@ -387,15 +387,12 @@ export function ClientPortal() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-fc-orange data-[state=active]:text-white">
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="quotes" className="data-[state=active]:bg-fc-orange data-[state=active]:text-white">
               Cotações
-            </TabsTrigger>
-            <TabsTrigger value="consignment" className="data-[state=active]:bg-fc-orange data-[state=active]:text-white">
-              Consignação
             </TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-fc-orange data-[state=active]:text-white">
               Pagamentos
@@ -410,16 +407,6 @@ export function ClientPortal() {
             <Quotes />
           </TabsContent>
 
-          <TabsContent value="consignment">
-            <div className="text-center py-12">
-              <Upload className="w-12 h-12 text-fc-orange mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-fc-dark-gray mb-2">Envio de Veículo para Consignação</h3>
-              <p className="text-fc-medium-gray mb-6">Envie seu veículo para nossa análise e possível consignação</p>
-              <Button className="fc-orange hover:bg-orange-600 text-white">
-                Enviar Veículo
-              </Button>
-            </div>
-          </TabsContent>
 
           <TabsContent value="payments">
             <Payments />

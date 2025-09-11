@@ -20,6 +20,7 @@ export const config = {
   matcher: [
     '/admin/:path*', 
     '/portal-cliente/:path*',
-    '/auth/:path*'
+    '/auth/:path*',
+    '/consignacao/:path*'
   ]
 }

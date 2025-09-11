@@ -1,3 +1,24 @@
+-- Atualizações idempotentes para suportar consignação
+
+DO $$ BEGIN
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Adicionar colunas em vehicles se não existirem
+DO $$ BEGIN
+  ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES public.users(id);
+  ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS source VARCHAR(20) DEFAULT 'company';
+  ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'approved';
+EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+-- Políticas para administradores gerenciarem veículos
+CREATE POLICY IF NOT EXISTS "Admins gerenciam quaisquer veículos" ON public.vehicles
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE id = auth.uid() AND role IN ('admin', 'manager')
+    )
+  );
+
 -- Atualização do banco de dados FC Locações para compatibilidade com o código
 -- Execute este script após o database-setup.sql
 

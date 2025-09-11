@@ -4,7 +4,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Enum para tipos de usuário
-CREATE TYPE user_role AS ENUM ('admin', 'manager', 'client');
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('admin', 'manager', 'client');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Enum para status de orçamento
 CREATE TYPE quote_status AS ENUM ('pending', 'approved', 'rejected', 'expired');
@@ -23,7 +27,7 @@ CREATE TABLE public.users (
 );
 
 -- Tabela de veículos
-CREATE TABLE public.vehicles (
+CREATE TABLE IF NOT EXISTS public.vehicles (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   brand VARCHAR(100) NOT NULL,
   model VARCHAR(100) NOT NULL,
@@ -37,6 +41,9 @@ CREATE TABLE public.vehicles (
   image_url TEXT,
   description TEXT,
   features TEXT[] DEFAULT '{}',
+  owner_id UUID REFERENCES public.users(id),
+  source VARCHAR(20) DEFAULT 'company', -- 'company' | 'consigned'
+  approval_status VARCHAR(20) DEFAULT 'approved', -- 'pending' | 'approved' | 'rejected'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -114,13 +121,16 @@ CREATE POLICY "Usuários podem atualizar próprio perfil" ON public.users
 CREATE POLICY "Veículos são públicos para visualização" ON public.vehicles
   FOR SELECT USING (true);
 
-CREATE POLICY "Apenas admins podem modificar veículos" ON public.vehicles
+-- Políticas de modificação de veículos
+-- Admin e manager podem tudo
+CREATE POLICY IF NOT EXISTS "Admins gerenciam quaisquer veículos" ON public.vehicles
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.users 
       WHERE id = auth.uid() AND role IN ('admin', 'manager')
     )
   );
+
 
 -- Políticas para orçamentos
 CREATE POLICY "Usuários podem criar orçamentos" ON public.quotes

@@ -25,6 +25,9 @@ export interface Vehicle {
   features?: string[]
   status: string
   featured: boolean
+  owner_id?: string | null
+  source?: 'company' | 'consigned'
+  approval_status?: 'pending' | 'approved' | 'rejected'
   created_at: string
   updated_at?: string
 }
