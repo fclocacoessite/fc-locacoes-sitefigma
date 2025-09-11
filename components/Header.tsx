@@ -3,10 +3,34 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 
 export function Header() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
   const { user, session, signOut } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Detectar tipos de usuário
+  const isAdmin = !!user && (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager')
+  const isClient = !!user && user.user_metadata?.role === 'client'
+
+  // Redirecionamentos baseados no tipo de usuário
+  useEffect(() => {
+    if (!session || !user) return
+
+    // Se for admin e estiver em página institucional, redireciona para /admin
+    if (isAdmin && !pathname.startsWith('/admin')) {
+      router.replace('/admin')
+      return
+    }
+
+    // Se for cliente e tentar acessar /admin, redireciona para /
+    if (isClient && pathname.startsWith('/admin')) {
+      router.replace('/')
+      return
+    }
+  }, [session, user, isAdmin, isClient, pathname, router])
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -26,7 +50,8 @@ export function Header() {
     return () => clearInterval(interval)
   }, [topBarInfo.length])
 
-  const navigation = [
+  // Navegação só aparece para não-admins
+  const navigation = isAdmin ? [] : [
     { name: 'Início', href: '/' },
     { name: 'Frota', href: '/frota' },
     { name: 'Orçamento', href: '/orcamento' },
@@ -99,7 +124,7 @@ export function Header() {
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
                   
                   {/* Botão para Admin se for admin/manager */}
-                  {(user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager') && (
+                  {isAdmin && (
                     <Link href="/admin">
                       <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
                         Admin
@@ -107,12 +132,14 @@ export function Header() {
                     </Link>
                   )}
                   
-                  {/* Botão Área do Cliente */}
-                  <Link href="/portal-cliente">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
-                      Portal
-                    </button>
-                  </Link>
+                  {/* Botão Área do Cliente - só para não-admins */}
+                  {!isAdmin && (
+                    <Link href="/portal-cliente">
+                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
+                        Portal
+                      </button>
+                    </Link>
+                  )}
                   
                   <button
                     onClick={() => signOut()}
@@ -145,7 +172,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex-shrink-0 flex items-center space-x-3">
+            <a href={isAdmin ? "/admin" : "/"} className="flex-shrink-0 flex items-center space-x-3">
               <img 
                 src="/logo-fc.jpg" 
                 alt="FC Locações" 
@@ -158,28 +185,32 @@ export function Header() {
             </a>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
-              >
-                {item.name}
-              </a>
-            ))}
-          </nav>
+          {/* Desktop Navigation - só para não-admins */}
+          {!isAdmin && (
+            <nav className="hidden md:flex space-x-8">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </nav>
+          )}
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
-            <a
-              href="/orcamento"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Solicitar Orçamento
-            </a>
-          </div>
+          {/* Desktop CTA - só para não-admins */}
+          {!isAdmin && (
+            <div className="hidden md:flex items-center space-x-4">
+              <a
+                href="/orcamento"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Solicitar Orçamento
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </header>
