@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { Vehicle } from '@/lib/supabase'
-import { MobileHeader } from '@/components/MobileHeader'
+import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
+import { AdminFloatingButton } from '@/components/AdminFloatingButton'
 
 export default function OrcamentoPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -107,7 +108,7 @@ export default function OrcamentoPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MobileHeader />
+      <ResponsiveHeader />
 
       {/* Formulário */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -269,6 +270,9 @@ export default function OrcamentoPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Floating Button */}
+      <AdminFloatingButton />
 
       {/* Footer */}
       <Footer />

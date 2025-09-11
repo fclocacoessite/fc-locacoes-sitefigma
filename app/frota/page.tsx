@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Vehicle } from '@/lib/supabase'
-import { MobileHeader } from '@/components/MobileHeader'
+import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
 import { FleetSearchFilter } from '@/components/FleetSearchFilter'
+import { AdminFloatingButton } from '@/components/AdminFloatingButton'
 
 // Array de veículos com imagens locais e descrições detalhadas
 const localVehicles = [
@@ -298,7 +299,7 @@ export default function FrotaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <MobileHeader />
+      <ResponsiveHeader />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-16">
@@ -667,6 +668,9 @@ export default function FrotaPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Floating Button */}
+      <AdminFloatingButton />
 
       {/* Footer */}
       <Footer />

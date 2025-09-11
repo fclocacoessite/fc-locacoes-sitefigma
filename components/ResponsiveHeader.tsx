@@ -3,11 +3,48 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { Menu, X, Shield, User, LogOut } from 'lucide-react'
 
-export function MobileHeader() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+export function ResponsiveHeader() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const { user, session, signOut } = useAuth()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Detectar tipos de usuário
+  const isAdmin = !!user && (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager')
+  const isClient = !!user && user.user_metadata?.role === 'client'
+
+  // Detectar tamanho da tela
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  // Redirecionamentos baseados no tipo de usuário
+  useEffect(() => {
+    if (!session || !user) return
+
+    // Se for admin e estiver em página institucional, redireciona para /admin
+    if (isAdmin && !pathname.startsWith('/admin')) {
+      router.replace('/admin')
+      return
+    }
+
+    // Se for cliente e tentar acessar /admin, redireciona para /
+    if (isClient && pathname.startsWith('/admin')) {
+      router.replace('/')
+      return
+    }
+  }, [session, user, isAdmin, isClient, pathname, router])
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -22,12 +59,13 @@ export function MobileHeader() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentInfoIndex((prev) => (prev + 1) % topBarInfo.length)
-    }, 3000) // Muda a cada 3 segundos
+    }, 3000)
 
     return () => clearInterval(interval)
   }, [topBarInfo.length])
 
-  const navigation = [
+  // Navegação só aparece para não-admins
+  const navigation = isAdmin ? [] : [
     { name: 'Início', href: '/' },
     { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
@@ -74,116 +112,144 @@ export function MobileHeader() {
     }
   }
 
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      {/* Top Bar */}
+      {/* Top Bar - Responsivo */}
       <div className="bg-gray-800 text-white py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
-            {/* Informações rotativas centralizadas */}
+            {/* Informações rotativas - adaptadas para mobile */}
             <div className="flex-1 flex justify-center">
               <div className="flex items-center space-x-2 text-center">
                 <div className="flex items-center space-x-1">
                   {getIcon(topBarInfo[currentInfoIndex].icon)}
-                  <span className="font-medium">{topBarInfo[currentInfoIndex].text}</span>
+                  <span className="font-medium text-xs sm:text-sm">
+                    {topBarInfo[currentInfoIndex].text}
+                  </span>
                 </div>
                 <span className="text-gray-400 text-xs hidden sm:inline">•</span>
-                <span className="text-gray-400 text-xs hidden sm:inline">{topBarInfo[currentInfoIndex].label}</span>
+                <span className="text-gray-400 text-xs hidden sm:inline">
+                  {topBarInfo[currentInfoIndex].label}
+                </span>
               </div>
             </div>
             
-            {/* Área de autenticação */}
-            <div className="flex items-center space-x-4">
+            {/* Área de autenticação - responsiva */}
+            <div className="flex items-center space-x-1">
               {!session ? (
                 <div className="text-white text-xs">Carregando...</div>
               ) : user ? (
-                <div className="flex items-center space-x-2">
-                  <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
+                <div className="flex items-center space-x-1">
+                  {/* Nome do usuário - oculto em mobile muito pequeno */}
+                  <span className="text-white text-xs hidden xs:inline">
+                    Olá, {user.user_metadata?.name || user.email}
+                  </span>
                   
                   {/* Botão para Admin se for admin/manager */}
-                  {(user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager') && (
+                  {isAdmin && (
                     <Link href="/admin">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors">
-                        Admin
+                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
+                        <Shield className="w-3 h-3" />
+                        <span className="hidden sm:inline">Admin</span>
                       </button>
                     </Link>
                   )}
                   
-                  {/* Botão Área do Cliente */}
-                  <Link href="/portal-cliente">
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors">
-                      Portal
-                    </button>
-                  </Link>
+                  {/* Botão Área do Cliente - só para não-admins */}
+                  {!isAdmin && (
+                    <Link href="/portal-cliente">
+                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
+                        <User className="w-3 h-3" />
+                        <span className="hidden sm:inline">Portal</span>
+                      </button>
+                    </Link>
+                  )}
                   
                   <button
-                    onClick={() => signOut()}
-                    className="border border-white/20 hover:bg-white/10 text-white px-2 py-1 rounded text-xs transition-colors"
+                    onClick={handleSignOut}
+                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1"
                   >
-                    Sair
+                    <LogOut className="w-3 h-3" />
+                    <span className="hidden sm:inline">Sair</span>
                   </button>
                 </div>
               ) : (
-                <Link href="/auth/signin">
-                  <button className="border border-white/20 hover:bg-white/10 text-white px-3 py-1 rounded text-xs">
-                    Portal do Cliente
-                  </button>
-                </Link>
+                <div className="flex items-center space-x-1">
+                  <Link href="/auth/signin">
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
+                      <User className="w-3 h-3" />
+                      <span className="hidden sm:inline">Cliente</span>
+                    </button>
+                  </Link>
+                  <Link href="/admin/login">
+                    <button className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1">
+                      <Shield className="w-3 h-3" />
+                      <span className="hidden sm:inline">Admin</span>
+                    </button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation */}
+      {/* Main Navigation - Responsivo */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo - Responsivo */}
           <div className="flex items-center">
-            <a href="/" className="flex-shrink-0 flex items-center space-x-3">
+            <a href={isAdmin ? "/admin" : "/"} className="flex-shrink-0 flex items-center space-x-2 sm:space-x-3">
               <img 
                 src="/logo-fc.jpg" 
                 alt="FC Locações" 
-                className="w-12 h-12 object-cover rounded-lg"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg"
               />
               <div className="text-gray-800">
-                <div className="font-bold text-xl">FC Locações</div>
-                <div className="text-xs text-gray-600">Caminhões Munck & Cestos Aéreos</div>
+                <div className="font-bold text-lg sm:text-xl">FC Locações</div>
+                <div className="text-xs text-gray-600 hidden sm:block">Caminhões Munck & Cestos Aéreos</div>
               </div>
             </a>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
-              >
-                {item.name}
-              </a>
-            ))}
-          </nav>
+          {/* Desktop Navigation - só para não-admins */}
+          {!isAdmin && (
+            <nav className="hidden lg:flex space-x-6 xl:space-x-8">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors whitespace-nowrap"
+                >
+                  {item.name}
+                </a>
+              ))}
+            </nav>
+          )}
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
-            <a
-              href="/orcamento"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Solicitar Orçamento
-            </a>
+          <div className="hidden md:flex items-center space-x-3">
+            {!isAdmin && (
+              <a
+                href="/orcamento"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 lg:px-6 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                Solicitar Orçamento
+              </a>
+            )}
             
             {/* Botão de Login Admin - sempre visível para não-logados */}
             {!session && (
               <a
                 href="/admin/login"
-                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
+                className="bg-gray-800 hover:bg-gray-900 text-white px-3 lg:px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+                <Shield className="w-4 h-4" />
                 <span>Admin</span>
               </a>
             )}
@@ -193,15 +259,9 @@ export function MobileHeader() {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-orange-500 transition-colors"
+              className="text-gray-700 hover:text-orange-500 transition-colors p-2"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -225,10 +285,11 @@ export function MobileHeader() {
               {user && (
                 <Link href="/portal-cliente">
                   <button 
-                    className="w-full text-left px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                    className="w-full text-left px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors flex items-center space-x-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Área do Cliente
+                    <User className="w-4 h-4" />
+                    <span>Área do Cliente</span>
                   </button>
                 </Link>
               )}
@@ -240,9 +301,7 @@ export function MobileHeader() {
                     className="w-full text-left px-3 py-2 text-sm font-medium bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
+                    <Shield className="w-4 h-4" />
                     <span>Login Admin</span>
                   </button>
                 </Link>

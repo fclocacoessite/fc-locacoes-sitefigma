@@ -53,9 +53,10 @@ export function Header() {
   // Navegação só aparece para não-admins
   const navigation = isAdmin ? [] : [
     { name: 'Início', href: '/' },
+    { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
     { name: 'Orçamento', href: '/orcamento' },
-    { name: 'Contato', href: '#contato' },
+    { name: 'Contato', href: '/contato' },
   ]
 
   const getIcon = (iconName: string) => {
@@ -200,17 +201,30 @@ export function Header() {
             </nav>
           )}
 
-          {/* Desktop CTA - só para não-admins */}
-          {!isAdmin && (
-            <div className="hidden md:flex items-center space-x-4">
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center space-x-4">
+            {!isAdmin && (
               <a
                 href="/orcamento"
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
               >
                 Solicitar Orçamento
               </a>
-            </div>
-          )}
+            )}
+            
+            {/* Botão de Login Admin - sempre visível para não-logados */}
+            {!session && (
+              <a
+                href="/admin/login"
+                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Admin</span>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </header>

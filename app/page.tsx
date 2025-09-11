@@ -1,9 +1,10 @@
-import { MobileHeader } from '@/components/MobileHeader'
+import { ResponsiveHeader } from '@/components/ResponsiveHeader'
+import { AdminFloatingButton } from '@/components/AdminFloatingButton'
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <MobileHeader />
+      <ResponsiveHeader />
       
       {/* Hero Section - Versão Completa */}
       <section id="inicio" className="relative min-h-screen flex items-center overflow-hidden">
@@ -443,6 +444,9 @@ export default function Home() {
         </div>
       </section>
 
+
+      {/* Admin Floating Button */}
+      <AdminFloatingButton />
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-12">
