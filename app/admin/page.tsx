@@ -6,7 +6,6 @@ import { Quote, supabase } from '@/lib/supabase'
 import { MobileHeader } from '@/components/MobileHeader'
  
 import { 
-  Users, 
   Truck, 
   FileText, 
   DollarSign, 
@@ -64,6 +63,7 @@ type VehicleImage = {
   created_at: string
   dataUrl?: string // Para armazenamento temporário
 }
+
 
 export default function AdminPage() {
   const router = useRouter()
@@ -896,7 +896,6 @@ export default function AdminPage() {
               { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
               { id: 'vehicles', label: 'Veículos', icon: Truck },
               { id: 'quotes', label: 'Orçamentos', icon: FileText },
-              { id: 'users', label: 'Usuários', icon: Users },
               { id: 'settings', label: 'Configurações', icon: Settings }
             ].map((tab) => {
               const Icon = tab.icon
@@ -1612,18 +1611,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'users' && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Gestão de Usuários</h3>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-500 text-center py-8">
-                  Funcionalidade de gestão de usuários em desenvolvimento.
-                </p>
-              </div>
-            </div>
-          )}
 
           {activeTab === 'settings' && (
             <div className="bg-white rounded-lg shadow">

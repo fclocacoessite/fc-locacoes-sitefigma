@@ -228,6 +228,12 @@ export function ResponsiveHeader() {
               </a>
             )}
             
+            <a
+              href="/consignacao"
+              className="bg-gray-800 hover:bg-gray-900 text-white px-4 lg:px-6 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+            >
+              Consignar Veículo
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
