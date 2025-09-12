@@ -10,6 +10,14 @@ export function AdminFloatingButton() {
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
 
+  // Verificar se foi dispensado anteriormente
+  useEffect(() => {
+    const dismissed = localStorage.getItem('admin-floating-dismissed')
+    if (dismissed === 'true') {
+      setIsDismissed(true)
+    }
+  }, [])
+
   // Mostrar o botão apenas se não estiver logado e não foi dispensado
   useEffect(() => {
     if (!session && !isDismissed) {
@@ -33,14 +41,6 @@ export function AdminFloatingButton() {
     // Salvar no localStorage para não mostrar novamente na sessão
     localStorage.setItem('admin-floating-dismissed', 'true')
   }
-
-  // Verificar se foi dispensado anteriormente
-  useEffect(() => {
-    const dismissed = localStorage.getItem('admin-floating-dismissed')
-    if (dismissed === 'true') {
-      setIsDismissed(true)
-    }
-  }, [])
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

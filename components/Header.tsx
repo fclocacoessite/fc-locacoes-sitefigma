@@ -124,14 +124,6 @@ export function Header() {
                 <div className="flex items-center space-x-1">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
                   
-                  {/* Botão para Admin se for admin/manager */}
-                  {isAdmin && (
-                    <Link href="/admin">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
-                        Admin
-                      </button>
-                    </Link>
-                  )}
                   
                   {/* Botão Área do Cliente - só para não-admins */}
                   {!isAdmin && (
@@ -154,11 +146,6 @@ export function Header() {
                   <Link href="/auth/signin">
                     <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
                       Cliente
-                    </button>
-                  </Link>
-                  <Link href="/admin/login">
-                    <button className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors">
-                      Admin
                     </button>
                   </Link>
                 </div>
@@ -219,18 +206,6 @@ export function Header() {
               Consignar Veículo
             </a>
             
-            {/* Botão de Login Admin - sempre visível para não-logados */}
-            {!session && (
-              <a
-                href="/admin/login"
-                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Admin</span>
-              </a>
-            )}
           </div>
         </div>
       </div>

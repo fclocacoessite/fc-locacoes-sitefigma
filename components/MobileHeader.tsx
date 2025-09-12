@@ -100,14 +100,6 @@ export function MobileHeader() {
                 <div className="flex items-center space-x-2">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
                   
-                  {/* Botão para Admin se for admin/manager */}
-                  {(user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager') && (
-                    <Link href="/admin">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors">
-                        Admin
-                      </button>
-                    </Link>
-                  )}
                   
                   {/* Botão Área do Cliente */}
                   <Link href="/portal-cliente">
@@ -175,18 +167,6 @@ export function MobileHeader() {
               Solicitar Orçamento
             </a>
             
-            {/* Botão de Login Admin - sempre visível para não-logados */}
-            {!session && (
-              <a
-                href="/admin/login"
-                className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Admin</span>
-              </a>
-            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -233,20 +213,6 @@ export function MobileHeader() {
                 </Link>
               )}
               
-              {/* Botão de Login Admin no menu mobile para não-logados */}
-              {!session && (
-                <Link href="/admin/login">
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm font-medium bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span>Login Admin</span>
-                  </button>
-                </Link>
-              )}
               
               <a
                 href="/orcamento"

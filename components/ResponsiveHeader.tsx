@@ -150,15 +150,6 @@ export function ResponsiveHeader() {
                     Olá, {user.user_metadata?.name || user.email}
                   </span>
                   
-                  {/* Botão para Admin se for admin/manager */}
-                  {isAdmin && (
-                    <Link href="/admin">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
-                        <Shield className="w-3 h-3" />
-                        <span className="hidden sm:inline">Admin</span>
-                      </button>
-                    </Link>
-                  )}
                   
                   {/* Botão Área do Cliente - só para não-admins */}
                   {!isAdmin && (
@@ -184,12 +175,6 @@ export function ResponsiveHeader() {
                     <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
                       <User className="w-3 h-3" />
                       <span className="hidden sm:inline">Cliente</span>
-                    </button>
-                  </Link>
-                  <Link href="/admin/login">
-                    <button className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1">
-                      <Shield className="w-3 h-3" />
-                      <span className="hidden sm:inline">Admin</span>
                     </button>
                   </Link>
                 </div>
@@ -243,16 +228,6 @@ export function ResponsiveHeader() {
               </a>
             )}
             
-            {/* Botão de Login Admin - sempre visível para não-logados */}
-            {!session && (
-              <a
-                href="/admin/login"
-                className="bg-gray-800 hover:bg-gray-900 text-white px-3 lg:px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center space-x-2"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin</span>
-              </a>
-            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -294,18 +269,6 @@ export function ResponsiveHeader() {
                 </Link>
               )}
               
-              {/* Botão de Login Admin no menu mobile para não-logados */}
-              {!session && (
-                <Link href="/admin/login">
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm font-medium bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Shield className="w-4 h-4" />
-                    <span>Login Admin</span>
-                  </button>
-                </Link>
-              )}
               
               <a
                 href="/orcamento"
