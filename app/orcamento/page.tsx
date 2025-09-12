@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Vehicle } from '@/lib/supabase'
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
-import { AdminFloatingButton } from '@/components/AdminFloatingButton'
+import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 
 export default function OrcamentoPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -271,8 +271,8 @@ export default function OrcamentoPage() {
         </div>
       </div>
 
-      {/* Admin Floating Button */}
-      <AdminFloatingButton />
+      {/* Consign Floating Button */}
+      <ConsignFloatingButton />
 
       {/* Footer */}
       <Footer />

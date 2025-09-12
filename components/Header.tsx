@@ -199,12 +199,6 @@ export function Header() {
               </a>
             )}
             
-            <a
-              href="/consignacao"
-              className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Consignar Veículo
-            </a>
             
           </div>
         </div>

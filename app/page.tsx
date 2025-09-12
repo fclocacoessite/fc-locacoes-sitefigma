@@ -1,5 +1,5 @@
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
-import { AdminFloatingButton } from '@/components/AdminFloatingButton'
+import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 
 export default function Home() {
   return (
@@ -451,8 +451,8 @@ export default function Home() {
       </section>
 
 
-      {/* Admin Floating Button */}
-      <AdminFloatingButton />
+      {/* Consign Floating Button */}
+      <ConsignFloatingButton />
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-12">
