@@ -423,7 +423,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold mb-2">Localização</h3>
-              <p className="text-gray-600">São Paulo, SP</p>
+              <p className="text-gray-600">Rio de Janeiro, RJ</p>
               <p className="text-sm text-gray-500">Nova Iguaçu</p>
             </div>
             
@@ -434,7 +434,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold mb-2">Horário</h3>
-              <p className="text-gray-600">Seg-Sex: 7h-18h</p>
+              <p className="text-gray-600">Seg-Sex: 8h-18h</p>
               <p className="text-sm text-gray-500">Emergência: 24h</p>
             </div>
           </div>

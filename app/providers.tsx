@@ -22,58 +22,84 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    // Obter sessão inicial
+    let mounted = true
+
+    // Obter sessão inicial apenas uma vez
     const getSession = async () => {
+      if (initialized) return
+      
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        if (mounted) {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+          setInitialized(true)
+        }
       } catch (error) {
         console.error('Erro ao obter sessão:', error)
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+          setInitialized(true)
+        }
       }
     }
 
     getSession()
 
-    // Escutar mudanças de autenticação
+    // Escutar mudanças de autenticação apenas após inicialização
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
-        console.log('Auth state changed:', event, session?.user?.email)
+        if (!mounted || !initialized) return
         
-        // Evitar atualizações desnecessárias e loops
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        // Só processar eventos importantes para evitar re-renderizações desnecessárias
+        if (event === 'SIGNED_IN') {
           setSession(session)
           setUser(session?.user ?? null)
-        }
-        
-        // Só atualizar loading para eventos importantes
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setLoading(false)
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null)
+          setUser(null)
           setLoading(false)
         }
+        // Ignorar TOKEN_REFRESHED para evitar re-renderizações
       }
     )
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [initialized])
 
   const signOut = async () => {
     try {
       console.log('Fazendo logout...')
+      
+      // Fazer logout do Supabase primeiro
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error('Erro ao fazer logout:', error)
       } else {
         console.log('Logout realizado com sucesso')
-        // Limpar estado local
-        setUser(null)
-        setSession(null)
       }
+      
+      // Limpar estado local
+      setUser(null)
+      setSession(null)
+      
+      // Redirecionar imediatamente
+      window.location.href = '/'
+      
     } catch (error) {
       console.error('Erro inesperado ao fazer logout:', error)
+      // Mesmo com erro, limpar estado e redirecionar
+      setUser(null)
+      setSession(null)
+      window.location.href = '/'
     }
   }
 

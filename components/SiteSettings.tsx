@@ -57,7 +57,7 @@ export function SiteSettings() {
     description: 'Especializada em locação de caminhões Munck, cestos aéreos e caminhões 3/4 para atender suas necessidades de construção e logística.',
     phone: '(11) 99999-9999',
     email: 'contato@fclocacoes.com.br',
-    address: 'Rua das Empresas, 123 - São Paulo, SP',
+    address: 'Rua das Empresas, 123 - Rio de Janeiro, RJ',
     cnpj: '12.345.678/0001-90',
     workingHours: 'Segunda a Sexta: 8h às 18h | Sábado: 8h às 12h'
   });

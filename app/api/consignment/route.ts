@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-const serverClient = createClient(supabaseUrl, supabaseKey)
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Dados recebidos na API:', body)
     
     const {
       ownerName,
@@ -30,6 +26,17 @@ export async function POST(request: NextRequest) {
 
     // Validar dados obrigatórios
     if (!ownerName || !email || !phone || !brand || !model || !year || !category || !condition || !dailyRate) {
+      console.log('Dados obrigatórios faltando:', {
+        ownerName: !!ownerName,
+        email: !!email,
+        phone: !!phone,
+        brand: !!brand,
+        model: !!model,
+        year: !!year,
+        category: !!category,
+        condition: !!condition,
+        dailyRate: !!dailyRate
+      })
       return NextResponse.json(
         { error: 'Dados obrigatórios não fornecidos' },
         { status: 400 }
@@ -45,11 +52,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validar telefone (formato básico)
-    const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/
-    if (!phoneRegex.test(phone)) {
+    // Validar telefone (formato mais flexível)
+    const phoneRegex = /^[\d\s\(\)\-\+]+$/
+    if (!phoneRegex.test(phone) || phone.length < 10) {
       return NextResponse.json(
-        { error: 'Formato de telefone inválido. Use: (XX) XXXXX-XXXX' },
+        { error: 'Formato de telefone inválido. Use um formato válido como (21) 99999-9999' },
         { status: 400 }
       )
     }
@@ -65,21 +72,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar valor da diária
-    const dailyRateNum = parseFloat(dailyRate.replace(/[^\d,]/g, '').replace(',', '.'))
+    const dailyRateStr = String(dailyRate).replace(/[^\d,.-]/g, '').replace(',', '.')
+    const dailyRateNum = parseFloat(dailyRateStr)
     if (isNaN(dailyRateNum) || dailyRateNum <= 0) {
+      console.log('Valor da diária inválido:', { dailyRate, dailyRateStr, dailyRateNum })
       return NextResponse.json(
         { error: 'Valor da diária inválido' },
         { status: 400 }
       )
     }
 
-    // Validar fotos
-    if (!photos || photos.length < 3) {
-      return NextResponse.json(
-        { error: 'É necessário enviar pelo menos 3 fotos' },
-        { status: 400 }
-      )
-    }
+    // Validar fotos (tornar opcional por enquanto)
+    // if (!photos || photos.length < 3) {
+    //   return NextResponse.json(
+    //     { error: 'É necessário enviar pelo menos 3 fotos' },
+    //     { status: 400 }
+    //   )
+    // }
 
     // Gerar ID único para a consignação
     const consignmentId = `CON-${Date.now().toString().slice(-6)}`
@@ -101,14 +110,15 @@ export async function POST(request: NextRequest) {
       daily_rate: dailyRateNum,
       description: description || null,
       photos: photos,
-      status: 'pending',
+      status: 'pending' as const,
       submitted_at: submittedAt || new Date().toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
 
     // Inserir no banco de dados
-    const { data, error } = await serverClient
+    console.log('Tentando inserir consignação:', consignmentData)
+    const { data, error } = await supabaseAdmin
       .from('consignments')
       .insert([consignmentData])
       .select()
@@ -116,10 +126,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Erro ao inserir consignação:', error)
       return NextResponse.json(
-        { error: 'Erro interno do servidor' },
+        { error: 'Erro interno do servidor', details: error.message },
         { status: 500 }
       )
     }
+
+    console.log('Consignação inserida com sucesso:', data)
 
     // Enviar email de confirmação (simulado)
     console.log(`Consignação ${consignmentId} criada com sucesso para ${email}`)
@@ -141,7 +153,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const { data, error } = await serverClient
+    const { data, error } = await supabaseAdmin
       .from('consignments')
       .select('*')
       .order('created_at', { ascending: false })

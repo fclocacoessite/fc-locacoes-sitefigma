@@ -109,7 +109,10 @@ export function MobileHeader() {
                   </Link>
                   
                   <button
-                    onClick={() => signOut()}
+                    onClick={() => {
+                      console.log('Botão Sair clicado!')
+                      signOut()
+                    }}
                     className="border border-white/20 hover:bg-white/10 text-white px-2 py-1 rounded text-xs transition-colors"
                   >
                     Sair
@@ -160,12 +163,6 @@ export function MobileHeader() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <a
-              href="/orcamento"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Solicitar Orçamento
-            </a>
             
           </div>
 
@@ -215,11 +212,11 @@ export function MobileHeader() {
               
               
               <a
-                href="/orcamento"
-                className="px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-center"
+                href="/consignacao"
+                className="px-3 py-2 text-sm font-medium bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Solicitar Orçamento
+                Consignar Veículo
               </a>
             </nav>
           </div>

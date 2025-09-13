@@ -211,8 +211,9 @@ export default function ContatoPage() {
                       id="name"
                       name="name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent focus:z-10 relative"
                       placeholder="Seu nome completo"
+                      style={{ zIndex: 10 }}
                     />
                   </div>
                   <div>
@@ -224,8 +225,9 @@ export default function ContatoPage() {
                       id="email"
                       name="email"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent focus:z-10 relative"
                       placeholder="seu@email.com"
+                      style={{ zIndex: 10 }}
                     />
                   </div>
                 </div>
@@ -238,8 +240,9 @@ export default function ContatoPage() {
                     type="tel"
                     id="phone"
                     name="phone"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent focus:z-10 relative"
                     placeholder="(11) 99999-9999"
+                    style={{ zIndex: 10 }}
                   />
                 </div>
 

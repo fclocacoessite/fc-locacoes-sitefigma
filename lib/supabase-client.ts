@@ -14,26 +14,30 @@ declare global {
 // Cliente público (para uso no frontend) - Singleton global
 export const supabase = (() => {
   if (typeof window !== 'undefined') {
-    // No cliente (browser)
-    if (!global.__supabase) {
-      global.__supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    // No cliente (browser) - usar window para evitar problemas de hidratação
+    if (!(window as any).__supabase) {
+      (window as any).__supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: false,
-          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          storage: window.localStorage,
+          flowType: 'pkce'
+        },
+      })
+    }
+    return (window as any).__supabase
+  } else {
+    // No servidor - usar global
+    if (!global.__supabase) {
+      global.__supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
         },
       })
     }
     return global.__supabase
-  } else {
-    // No servidor
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
   }
 })()
 

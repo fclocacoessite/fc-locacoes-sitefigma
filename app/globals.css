@@ -186,4 +186,107 @@
   .focus\:ring-fc-orange:focus {
     --tw-ring-color: #FF5722;
   }
+  
+  /* Solução definitiva para manter foco nos campos de entrada */
+  input:focus,
+  textarea:focus,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none !important;
+    border-color: #FF5722 !important;
+    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2) !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+  }
+  
+  /* Prevenir perda de foco durante digitação */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"],
+  textarea {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  /* Garantir que elementos focados mantenham o foco */
+  input:focus,
+  textarea:focus {
+    pointer-events: auto !important;
+    user-select: text !important;
+  }
+  
+  /* Solução específica para problemas de foco no React */
+  input[data-slot="input"]:focus,
+  input[data-slot="input"]:focus-visible {
+    outline: none !important;
+    border-color: #FF5722 !important;
+    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2) !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+  }
+  
+  /* Prevenir perda de foco durante mudanças de estado */
+  input[data-slot="input"] {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+  }
+  
+  /* Solução específica para formulário de consignação */
+  #ownerName:focus,
+  #email:focus,
+  #phone:focus,
+  #brand:focus,
+  #model:focus,
+  #year:focus,
+  #capacity:focus,
+  #mileage:focus,
+  #dailyRate:focus,
+  #description:focus {
+    outline: none !important;
+    border-color: #FF5722 !important;
+    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2) !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+  }
+  
+  /* Forçar foco em campos específicos */
+  input[id="ownerName"],
+  input[id="email"],
+  input[id="phone"],
+  input[id="brand"],
+  input[id="model"],
+  input[id="year"],
+  input[id="capacity"],
+  input[id="mileage"],
+  input[id="dailyRate"],
+  textarea[id="description"] {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    pointer-events: auto !important;
+  }
 } 

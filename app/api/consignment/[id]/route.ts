@@ -13,39 +13,32 @@ export async function PATCH(
   try {
     const { id } = params
     const body = await request.json()
-    const { status, rejection_reason, admin_notes } = body
+    
+    const { status } = body
+
+    if (!status) {
+      return NextResponse.json(
+        { error: 'Status é obrigatório' },
+        { status: 400 }
+      )
+    }
 
     // Validar status
-    if (!['approved', 'rejected'].includes(status)) {
+    const validStatuses = ['pending', 'approved', 'rejected', 'active', 'completed']
+    if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Status inválido' },
         { status: 400 }
       )
     }
 
-    // Preparar dados para atualização
-    const updateData: any = {
-      status,
-      updated_at: new Date().toISOString()
-    }
-
-    if (status === 'approved') {
-      updateData.approved_at = new Date().toISOString()
-    } else if (status === 'rejected') {
-      updateData.rejected_at = new Date().toISOString()
-      if (rejection_reason) {
-        updateData.rejection_reason = rejection_reason
-      }
-    }
-
-    if (admin_notes) {
-      updateData.admin_notes = admin_notes
-    }
-
-    // Atualizar no banco de dados
+    // Atualizar consignação
     const { data, error } = await serverClient
       .from('consignments')
-      .update(updateData)
+      .update({ 
+        status,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
 
@@ -64,43 +57,8 @@ export async function PATCH(
       )
     }
 
-    // Se aprovada, criar veículo na tabela de veículos
-    if (status === 'approved') {
-      const consignment = data[0]
-      
-      const vehicleData = {
-        brand: consignment.brand,
-        model: consignment.model,
-        year: consignment.year,
-        category: consignment.category,
-        capacity: consignment.capacity,
-        condition: consignment.condition,
-        mileage: consignment.mileage,
-        daily_rate: consignment.daily_rate,
-        description: consignment.description,
-        photos: consignment.photos,
-        status: 'available',
-        featured: false,
-        source: 'consigned',
-        owner_id: null, // Será preenchido quando o proprietário se cadastrar
-        approval_status: 'approved',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      const { error: vehicleError } = await serverClient
-        .from('vehicles')
-        .insert([vehicleData])
-
-      if (vehicleError) {
-        console.error('Erro ao criar veículo:', vehicleError)
-        // Não falhar a operação, apenas logar o erro
-      }
-    }
-
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      message: `Consignação ${status === 'approved' ? 'aprovada' : 'rejeitada'} com sucesso`,
       consignment: data[0]
     })
 
@@ -120,6 +78,21 @@ export async function DELETE(
   try {
     const { id } = params
 
+    // Verificar se a consignação existe
+    const { data: existingConsignment, error: fetchError } = await serverClient
+      .from('consignments')
+      .select('id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !existingConsignment) {
+      return NextResponse.json(
+        { error: 'Consignação não encontrada' },
+        { status: 404 }
+      )
+    }
+
+    // Deletar consignação
     const { error } = await serverClient
       .from('consignments')
       .delete()
@@ -133,9 +106,9 @@ export async function DELETE(
       )
     }
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      message: 'Consignação deletada com sucesso'
+      message: 'Consignação excluída com sucesso'
     })
 
   } catch (error) {
@@ -146,4 +119,3 @@ export async function DELETE(
     )
   }
 }
-

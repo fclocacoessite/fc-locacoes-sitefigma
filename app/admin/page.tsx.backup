@@ -47,7 +47,7 @@ import {
   Mail,
   MapPin
 } from 'lucide-react'
-// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type AdminVehicle = {
   id: string
@@ -1022,8 +1022,7 @@ export default function AdminPage() {
         {/* Conteúdo das Tabs */}
         <div className="space-y-6">
           {activeTab === 'dashboard' && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="p-5">
                   <div className="flex items-center">
@@ -1138,7 +1137,6 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
-            </>
           )}
 
           {activeTab === 'vehicles' && (
@@ -1519,26 +1517,44 @@ export default function AdminPage() {
                                 <div className="text-sm text-gray-500">{vehicle.category}</div>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => openEditModal(vehicle)}
-                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
-                                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Editar veículo"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteVehicle(vehicle.id)}
-                                  disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
-                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Excluir veículo"
-                                >
-                                  {deletingVehicle === vehicle.id ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </button>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => openEditModal(vehicle)}
+                                        disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Editar veículo"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Editar veículo
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => handleDeleteVehicle(vehicle.id)}
+                                        disabled={updatingVehicle === vehicle.id || deletingVehicle === vehicle.id}
+                                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Excluir veículo"
+                                      >
+                                        {deletingVehicle === vehicle.id ? (
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                        ) : (
+                                          <Trash2 className="h-4 w-4" />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Excluir veículo
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </div>
                           </div>
@@ -1665,39 +1681,75 @@ export default function AdminPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                             {quote.status === 'pending' && (
                               <>
-                                <button 
-                                  onClick={() => handleQuoteStatusUpdate(quote.id, 'approved')}
-                                  className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
-                                  title="Aprovar"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </button>
-                                <button 
-                                  onClick={() => handleQuoteStatusUpdate(quote.id, 'rejected')}
-                                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                                  title="Rejeitar"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </button>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        onClick={() => handleQuoteStatusUpdate(quote.id, 'approved')}
+                                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                                        aria-label="Aprovar"
+                                      >
+                                        <CheckCircle className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Aprovar
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <button 
+                                        onClick={() => handleQuoteStatusUpdate(quote.id, 'rejected')}
+                                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                                        aria-label="Rejeitar"
+                                      >
+                                        <XCircle className="h-4 w-4" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                      Rejeitar
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </>
                             )}
-                            <button 
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors" 
-                              onClick={() => {
-                                // Mostrar modal com detalhes do orçamento
-                                alert(`Detalhes do Orçamento:\n\nCliente: ${quote.client_name}\nEmail: ${quote.client_email}\nTelefone: ${quote.client_phone}\nVeículo: ${vehicle ? `${vehicle.brand} ${vehicle.model}` : 'N/A'}\nPeríodo: ${new Date(quote.start_date).toLocaleDateString('pt-BR')} até ${new Date(quote.end_date).toLocaleDateString('pt-BR')}\nDias: ${quote.total_days}\nValor: R$ ${quote.total_cost.toFixed(2)}\nStatus: ${getStatusText(quote.status)}\nMensagem: ${quote.message || 'Nenhuma mensagem'}`)
-                              }}
-                              title="Visualizar detalhes"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteQuote(quote.id, quote.client_name)}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors" 
-                              title="Excluir orçamento"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <TooltipProvider>
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors" 
+                                    onClick={() => {
+                                      // Mostrar modal com detalhes do orçamento
+                                      alert(`Detalhes do Orçamento:\n\nCliente: ${quote.client_name}\nEmail: ${quote.client_email}\nTelefone: ${quote.client_phone}\nVeículo: ${vehicle ? `${vehicle.brand} ${vehicle.model}` : 'N/A'}\nPeríodo: ${new Date(quote.start_date).toLocaleDateString('pt-BR')} até ${new Date(quote.end_date).toLocaleDateString('pt-BR')}\nDias: ${quote.total_days}\nValor: R$ ${quote.total_cost.toFixed(2)}\nStatus: ${getStatusText(quote.status)}\nMensagem: ${quote.message || 'Nenhuma mensagem'}`)
+                                    }}
+                                    aria-label="Visualizar detalhes"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                  Visualizar detalhes
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    onClick={() => handleDeleteQuote(quote.id, quote.client_name)}
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors" 
+                                    aria-label="Excluir orçamento"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center" sideOffset={4} className="bg-gray-100 text-gray-800 px-2 py-1 text-[11px] rounded-md border border-gray-300 shadow-sm">
+                                  Excluir orçamento
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </td>
                         </tr>
                       )

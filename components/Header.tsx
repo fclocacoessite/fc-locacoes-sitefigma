@@ -190,22 +190,12 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            {!isAdmin && (
-              <a
-                href="/orcamento"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-              >
-                Solicitar Orçamento
-              </a>
-            )}
-            
             <a
               href="/consignacao"
               className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Consignar Veículo
             </a>
-            
           </div>
         </div>
       </div>

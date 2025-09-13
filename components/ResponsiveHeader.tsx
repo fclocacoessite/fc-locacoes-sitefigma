@@ -33,18 +33,12 @@ export function ResponsiveHeader() {
   useEffect(() => {
     if (!session || !user) return
 
-    // Se for admin e estiver em página institucional, redireciona para /admin
-    if (isAdmin && !pathname.startsWith('/admin')) {
-      router.replace('/admin')
-      return
-    }
-
     // Se for cliente e tentar acessar /admin, redireciona para /
     if (isClient && pathname.startsWith('/admin')) {
       router.replace('/')
       return
     }
-  }, [session, user, isAdmin, isClient, pathname, router])
+  }, [session, user, isClient, pathname, router])
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -161,6 +155,7 @@ export function ResponsiveHeader() {
                     </Link>
                   )}
                   
+                  
                   <button
                     onClick={handleSignOut}
                     className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1"
@@ -219,15 +214,12 @@ export function ResponsiveHeader() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-3">
-            {!isAdmin && (
-              <a
-                href="/orcamento"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 lg:px-6 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-              >
-                Solicitar Orçamento
-              </a>
-            )}
-            
+            <a
+              href="/consignacao"
+              className="bg-gray-800 hover:bg-gray-900 text-white px-4 lg:px-6 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+            >
+              Consignar Veículo
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -257,7 +249,7 @@ export function ResponsiveHeader() {
               ))}
               
               {/* Botão Área do Cliente no menu mobile para usuários logados */}
-              {user && (
+              {user && !isAdmin && (
                 <Link href="/portal-cliente">
                   <button 
                     className="w-full text-left px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors flex items-center space-x-2"
@@ -268,6 +260,7 @@ export function ResponsiveHeader() {
                   </button>
                 </Link>
               )}
+              
               
               
               <a

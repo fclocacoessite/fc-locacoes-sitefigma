@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Progress } from './ui/progress'
@@ -19,33 +19,12 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-export function ConsignmentForm() {
+export function ConsignmentFormSimple() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState({
-    // Dados do proprietário
-    ownerName: '',
-    email: '',
-    phone: '',
-    
-    // Dados do veículo
-    brand: '',
-    model: '',
-    year: '',
-    category: '',
-    capacity: '',
-    condition: '',
-    mileage: '',
-    dailyRate: '',
-    description: '',
-    
-    // Termos
-    acceptTerms: false
-  })
-
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
-
-  // Refs para manter foco
-  const inputRefs = useRef<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null }>({})
+  
+  // Refs para todos os inputs
+  const formRef = useRef<HTMLFormElement>(null)
 
   const totalSteps = 4
   const progress = (currentStep / totalSteps) * 100
@@ -86,27 +65,6 @@ export function ConsignmentForm() {
       setCurrentStep(currentStep - 1)
     }
   }
-
-  // Handler que só atualiza no blur para evitar re-renders
-  const handleInputBlur = useCallback((e: any) => {
-    const { name, value, type } = e.target
-    const checked = (e.target as HTMLInputElement).checked
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }, [])
-
-  // Handler para mudanças imediatas (sem re-render)
-  const handleInputChange = useCallback((e: any) => {
-    // Não faz nada, apenas mantém o foco
-  }, [])
-
-  // Função para registrar refs
-  const registerRef = useCallback((name: string, ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null) => {
-    inputRefs.current[name] = ref
-  }, [])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -151,37 +109,29 @@ export function ConsignmentForm() {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async () => {
-    try {
-      // Coletar dados dos inputs não controlados
-      const formData = new FormData()
-      const ownerName = inputRefs.current.ownerName?.value || ''
-      const email = inputRefs.current.email?.value || ''
-      const phone = inputRefs.current.phone?.value || ''
-      const brand = inputRefs.current.brand?.value || ''
-      const model = inputRefs.current.model?.value || ''
-      const year = inputRefs.current.year?.value || ''
-      const category = formData.category || ''
-      const capacity = inputRefs.current.capacity?.value || ''
-      const condition = inputRefs.current.condition?.value || ''
-      const mileage = inputRefs.current.mileage?.value || ''
-      const dailyRate = inputRefs.current.dailyRate?.value || ''
-      const description = inputRefs.current.description?.value || ''
-      const acceptTerms = (inputRefs.current.acceptTerms as HTMLInputElement)?.checked || false
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formRef.current) return
 
+    const formData = new FormData(formRef.current)
+    const data = Object.fromEntries(formData.entries())
+
+    try {
       const payload = {
-        ownerName,
-        email,
-        phone,
-        brand,
-        model,
-        year,
-        category,
-        capacity,
-        condition,
-        mileage,
-        dailyRate,
-        description,
+        ownerName: data.ownerName,
+        email: data.email,
+        phone: data.phone,
+        brand: data.brand,
+        model: data.model,
+        year: data.year,
+        category: data.category,
+        capacity: data.capacity,
+        condition: data.condition,
+        mileage: data.mileage,
+        dailyRate: data.dailyRate,
+        description: data.description,
+        acceptTerms: data.acceptTerms === 'on',
         photos: uploadedFiles,
         submittedAt: new Date().toISOString()
       }
@@ -196,22 +146,7 @@ export function ConsignmentForm() {
 
       if (response.ok) {
         toast.success('Solicitação de consignação enviada com sucesso!')
-        // Reset form
-        setFormData({
-          ownerName: '',
-          email: '',
-          phone: '',
-          brand: '',
-          model: '',
-          year: '',
-          category: '',
-          capacity: '',
-          condition: '',
-          mileage: '',
-          dailyRate: '',
-          description: '',
-          acceptTerms: false
-        })
+        formRef.current.reset()
         setUploadedFiles([])
         setCurrentStep(1)
       } else {
@@ -287,13 +222,11 @@ export function ConsignmentForm() {
             Nome Completo *
           </label>
           <input
-            ref={(el) => registerRef('ownerName', el)}
             id="ownerName"
             name="ownerName"
             type="text"
             placeholder="Seu nome completo"
-            defaultValue={formData.ownerName}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="name"
           />
@@ -304,13 +237,11 @@ export function ConsignmentForm() {
             E-mail *
           </label>
           <input
-            ref={(el) => registerRef('email', el)}
             id="email"
             name="email"
             type="email"
             placeholder="seu@email.com"
-            defaultValue={formData.email}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="email"
           />
@@ -322,14 +253,11 @@ export function ConsignmentForm() {
           Telefone/WhatsApp *
         </label>
         <input
-          ref={(el) => registerRef('phone', el)}
           id="phone"
           name="phone"
           type="tel"
           placeholder="(21) 99999-9999"
-          defaultValue={formData.phone}
-          onBlur={handleInputChange}
-          onInput={handleInputChange}
+          required
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
           autoComplete="tel"
         />
@@ -354,19 +282,18 @@ export function ConsignmentForm() {
         <label className="block text-base font-medium text-fc-dark-gray mb-1">Categoria do Veículo *</label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {vehicleCategories.map((category) => (
-            <div 
-              key={category}
-              className={`border-2 rounded-lg p-4 cursor-pointer text-center transition-colors ${
-                formData.category === category 
-                  ? 'border-fc-orange bg-orange-50' 
-                  : 'border-gray-200 hover:border-fc-orange'
-              }`}
-              onClick={() => {
-                setFormData(prev => ({ ...prev, category }))
-              }}
-            >
-              <span className="text-sm font-medium text-fc-dark-gray">{category}</span>
-            </div>
+            <label key={category} className="cursor-pointer">
+              <input
+                type="radio"
+                name="category"
+                value={category}
+                className="sr-only"
+                required
+              />
+              <div className="border-2 rounded-lg p-4 text-center transition-colors hover:border-fc-orange peer-checked:border-fc-orange peer-checked:bg-orange-50">
+                <span className="text-sm font-medium text-fc-dark-gray">{category}</span>
+              </div>
+            </label>
           ))}
         </div>
       </div>
@@ -378,13 +305,11 @@ export function ConsignmentForm() {
             Marca *
           </label>
           <input
-            ref={(el) => registerRef('brand', el)}
             id="brand"
             name="brand"
             type="text"
             placeholder="Ex: Mercedes-Benz"
-            defaultValue={formData.brand}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="organization"
           />
@@ -394,13 +319,11 @@ export function ConsignmentForm() {
             Modelo *
           </label>
           <input
-            ref={(el) => registerRef('model', el)}
             id="model"
             name="model"
             type="text"
             placeholder="Ex: Atego 1719"
-            defaultValue={formData.model}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="organization"
           />
@@ -413,13 +336,11 @@ export function ConsignmentForm() {
             Ano *
           </label>
           <input
-            ref={(el) => registerRef('year', el)}
             id="year"
             name="year"
             type="number"
             placeholder="2020"
-            defaultValue={formData.year}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="off"
           />
@@ -429,13 +350,10 @@ export function ConsignmentForm() {
             Capacidade
           </label>
           <input
-            ref={(el) => registerRef('capacity', el)}
             id="capacity"
             name="capacity"
             type="text"
             placeholder="Ex: 12 toneladas"
-            defaultValue={formData.capacity}
-            onBlur={handleInputBlur}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="off"
           />
@@ -445,13 +363,10 @@ export function ConsignmentForm() {
             Quilometragem
           </label>
           <input
-            ref={(el) => registerRef('mileage', el)}
             id="mileage"
             name="mileage"
             type="text"
             placeholder="Ex: 50.000 km"
-            defaultValue={formData.mileage}
-            onBlur={handleInputBlur}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="off"
           />
@@ -464,12 +379,9 @@ export function ConsignmentForm() {
             Estado de Conservação *
           </label>
           <select
-            ref={(el) => registerRef('condition', el)}
             id="condition"
             name="condition"
-            defaultValue={formData.condition}
-            onBlur={handleInputChange}
-            onChange={handleInputChange}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
           >
             <option value="">Selecione o estado</option>
@@ -485,13 +397,11 @@ export function ConsignmentForm() {
             Valor da Diária Pretendida *
           </label>
           <input
-            ref={(el) => registerRef('dailyRate', el)}
             id="dailyRate"
             name="dailyRate"
             type="number"
             placeholder="R$ 500"
-            defaultValue={formData.dailyRate}
-            onBlur={handleInputBlur}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
             autoComplete="off"
           />
@@ -503,13 +413,9 @@ export function ConsignmentForm() {
           Descrição Adicional
         </label>
         <textarea
-          ref={(el) => registerRef('description', el)}
           id="description"
           name="description"
           placeholder="Descreva detalhes importantes sobre o veículo..."
-          defaultValue={formData.description}
-          onBlur={handleInputChange}
-          onInput={handleInputChange}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange min-h-20"
           rows={4}
         />
@@ -596,95 +502,13 @@ export function ConsignmentForm() {
         </p>
       </div>
 
-      {/* Resumo dos Dados */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-fc-dark-gray">
-            <User className="w-5 h-5 mr-2" />
-            Dados do Proprietário
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Nome:</span>
-            <span className="font-medium">{formData.ownerName}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">E-mail:</span>
-            <span className="font-medium">{formData.email}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Telefone:</span>
-            <span className="font-medium">{formData.phone}</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-fc-dark-gray">
-            <Car className="w-5 h-5 mr-2" />
-            Dados do Veículo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Categoria:</span>
-            <span className="font-medium">{formData.category}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Marca:</span>
-            <span className="font-medium">{formData.brand}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Modelo:</span>
-            <span className="font-medium">{formData.model}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Ano:</span>
-            <span className="font-medium">{formData.year}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Capacidade:</span>
-            <span className="font-medium">{formData.capacity}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Quilometragem:</span>
-            <span className="font-medium">{formData.mileage}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Estado:</span>
-            <span className="font-medium">{formData.condition}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-fc-medium-gray">Diária:</span>
-            <span className="font-medium">R$ {formData.dailyRate}</span>
-          </div>
-          {formData.description && (
-            <div>
-              <span className="text-fc-medium-gray">Descrição:</span>
-              <p className="mt-1 text-sm text-fc-dark-gray">{formData.description}</p>
-            </div>
-          )}
-          {uploadedFiles.length > 0 && (
-            <div className="flex justify-between">
-              <span className="text-fc-medium-gray">Fotos:</span>
-              <span className="font-medium">{uploadedFiles.length} foto(s) enviada(s)</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Termos */}
       <div className="flex items-start space-x-3 p-4 rounded-lg bg-orange-50">
         <input
-          ref={(el) => registerRef('acceptTerms', el)}
           type="checkbox"
           id="acceptTerms"
           name="acceptTerms"
-          defaultChecked={formData.acceptTerms}
-          onBlur={handleInputChange}
-          onChange={handleInputChange}
+          required
           className="mt-1 h-4 w-4 text-fc-orange focus:ring-fc-orange border-gray-300 rounded"
         />
         <div className="text-sm">
@@ -742,42 +566,46 @@ export function ConsignmentForm() {
 
         <Card className="bg-white shadow-lg">
           <CardContent className="p-8">
-            <StepIndicator />
-            
-            <div className="mb-8">
-              {renderStep()}
-            </div>
+            <form ref={formRef} onSubmit={handleSubmit}>
+              <StepIndicator />
+              
+              <div className="mb-8">
+                {renderStep()}
+              </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className="flex items-center"
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-
-              {currentStep < totalSteps ? (
+              {/* Navigation Buttons */}
+              <div className="flex justify-between">
                 <Button
-                  onClick={nextStep}
-                  className="flex items-center fc-orange hover:bg-orange-600 text-white"
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
+                  className="flex items-center"
                 >
-                  Continuar
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Voltar
                 </Button>
-              ) : (
-                <Button 
-                  onClick={handleSubmit}
-                  className="flex items-center fc-orange hover:bg-orange-600 text-white"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Enviar Solicitação
-                </Button>
-              )}
-            </div>
+
+                {currentStep < totalSteps ? (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="flex items-center fc-orange hover:bg-orange-600 text-white"
+                  >
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button 
+                    type="submit"
+                    className="flex items-center fc-orange hover:bg-orange-600 text-white"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Enviar Solicitação
+                  </Button>
+                )}
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

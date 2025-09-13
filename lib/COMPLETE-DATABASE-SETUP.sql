@@ -152,5 +152,59 @@ WHERE table_schema = 'public'
 AND table_name = 'quotes' 
 ORDER BY ordinal_position;
 
--- PASSO 15: Confirmação final
+-- PASSO 15: Criar tabela consignments
+CREATE TABLE IF NOT EXISTS public.consignments (
+    id TEXT PRIMARY KEY,
+    owner_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    brand TEXT NOT NULL,
+    model TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    capacity TEXT,
+    condition TEXT NOT NULL,
+    mileage TEXT,
+    price TEXT,
+    daily_rate DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    photos TEXT[] DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'active', 'completed')),
+    submitted_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Criar índices para consignments
+CREATE INDEX IF NOT EXISTS idx_consignments_status ON public.consignments(status);
+CREATE INDEX IF NOT EXISTS idx_consignments_created_at ON public.consignments(created_at);
+CREATE INDEX IF NOT EXISTS idx_consignments_email ON public.consignments(email);
+
+-- Habilitar RLS para consignments
+ALTER TABLE public.consignments ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para consignments (todos podem acessar)
+DROP POLICY IF EXISTS "Todos podem ler consignações" ON public.consignments;
+CREATE POLICY "Todos podem ler consignações" ON public.consignments
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Todos podem inserir consignações" ON public.consignments;
+CREATE POLICY "Todos podem inserir consignações" ON public.consignments
+    FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Todos podem atualizar consignações" ON public.consignments;
+CREATE POLICY "Todos podem atualizar consignações" ON public.consignments
+    FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Todos podem deletar consignações" ON public.consignments;
+CREATE POLICY "Todos podem deletar consignações" ON public.consignments
+    FOR DELETE USING (true);
+
+-- Trigger para updated_at em consignments
+CREATE TRIGGER update_consignments_updated_at
+    BEFORE UPDATE ON public.consignments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- PASSO 16: Confirmação final
 SELECT '🎉 BANCO DE DADOS CONFIGURADO COMPLETAMENTE! Sistema pronto para uso!' as status_final;
