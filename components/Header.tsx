@@ -196,6 +196,14 @@ export function Header() {
             >
               Consignar Veículo
             </a>
+            {!isAdmin && (
+              <a
+                href="/orcamento"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Solicitar Orçamento
+              </a>
+            )}
           </div>
         </div>
       </div>

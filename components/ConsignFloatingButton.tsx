@@ -2,17 +2,17 @@
 
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
-import { Shield, X } from 'lucide-react'
+import { Truck, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-export function AdminFloatingButton() {
+export function ConsignFloatingButton() {
   const { session, user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
 
   // Verificar se foi dispensado anteriormente
   useEffect(() => {
-    const dismissed = localStorage.getItem('admin-floating-dismissed')
+    const dismissed = localStorage.getItem('consign-floating-dismissed')
     if (dismissed === 'true') {
       setIsDismissed(true)
     }
@@ -21,10 +21,10 @@ export function AdminFloatingButton() {
   // Mostrar o botão apenas se não estiver logado e não foi dispensado
   useEffect(() => {
     if (!session && !isDismissed) {
-      // Mostrar após 3 segundos para não ser muito intrusivo
+      // Mostrar após 5 segundos para não ser muito intrusivo
       const timer = setTimeout(() => {
         setIsVisible(true)
-      }, 3000)
+      }, 5000)
       
       return () => clearTimeout(timer)
     }
@@ -39,7 +39,7 @@ export function AdminFloatingButton() {
     setIsDismissed(true)
     setIsVisible(false)
     // Salvar no localStorage para não mostrar novamente na sessão
-    localStorage.setItem('admin-floating-dismissed', 'true')
+    localStorage.setItem('consign-floating-dismissed', 'true')
   }
 
   return (
@@ -47,8 +47,8 @@ export function AdminFloatingButton() {
       <div className="bg-gray-900 text-white rounded-lg shadow-lg p-4 max-w-sm animate-in slide-in-from-bottom-2 duration-300">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Shield className="w-5 h-5 text-orange-500" />
-            <span className="font-semibold text-sm">Área Administrativa</span>
+            <Truck className="w-5 h-5 text-orange-500" />
+            <span className="font-semibold text-sm">Consignar Veículo</span>
           </div>
           <button
             onClick={handleDismiss}
@@ -59,15 +59,15 @@ export function AdminFloatingButton() {
         </div>
         
         <p className="text-xs text-gray-300 mb-3">
-          Acesso rápido ao painel administrativo
+          Ganhe dinheiro consignando seu veículo conosco
         </p>
         
         <div className="flex space-x-2">
           <Link
-            href="/admin/login"
+            href="/consignacao"
             className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-xs font-medium transition-colors text-center"
           >
-            Fazer Login
+            Consignar Agora
           </Link>
           <button
             onClick={handleDismiss}

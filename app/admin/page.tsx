@@ -28,7 +28,6 @@ type Consignment = {
 }
  
 import { 
-  Users, 
   Truck, 
   FileText, 
   DollarSign, 
@@ -45,7 +44,8 @@ import {
   Save,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Users
 } from 'lucide-react'
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -86,6 +86,7 @@ type VehicleImage = {
   created_at: string
   dataUrl?: string // Para armazenamento temporário
 }
+
 
 export default function AdminPage() {
   const router = useRouter()

@@ -8,16 +8,12 @@ import {
   LayoutDashboard, 
   Truck, 
   FileText, 
-  Users, 
   Settings, 
   Plus,
-  Search,
   Filter,
   Edit,
   Trash2,
   Eye,
-  CheckCircle,
-  XCircle,
   Clock,
   TrendingUp,
   AlertTriangle,
@@ -687,13 +683,6 @@ export function AdminPanel() {
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'fleet' && <Fleet />}
           {activeTab === 'consignment' && <Consignment />}
-          {activeTab === 'clients' && (
-            <div className="text-center py-12">
-              <Users className="w-12 h-12 text-fc-orange mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-fc-dark-gray">Gestão de Clientes</h3>
-              <p className="text-fc-medium-gray">Em desenvolvimento...</p>
-            </div>
-          )}
           {activeTab === 'settings' && <SiteSettings />}
         </div>
       </div>
