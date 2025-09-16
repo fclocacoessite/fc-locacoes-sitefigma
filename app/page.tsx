@@ -191,9 +191,9 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-lg font-bold text-orange-500">R$ 750/dia</span>
-                  <button className="bg-gray-300 text-gray-500 px-4 py-2 rounded text-sm min-h-[36px] flex items-center justify-center" disabled>
+                  <a href="/orcamento" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm min-h-[36px] flex items-center justify-center">
                     Solicitar
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>

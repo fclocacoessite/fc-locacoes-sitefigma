@@ -5,6 +5,7 @@ import { useAuth } from '@/app/providers'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X, Shield, User, LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function ResponsiveHeader() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
@@ -214,12 +215,13 @@ export function ResponsiveHeader() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-3">
-            <a
-              href="/consignacao"
-              className="bg-gray-800 hover:bg-gray-900 text-white px-4 lg:px-6 py-2 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              Consignar Veículo
-            </a>
+            {!isAdmin && (
+              <Link href="/orcamento">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-4 lg:px-6 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                  Solicitar Orçamento
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

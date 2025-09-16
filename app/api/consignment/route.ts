@@ -3,8 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 Iniciando POST /api/consignment')
+    console.log('📦 supabaseAdmin disponível:', !!supabaseAdmin)
+    
     const body = await request.json()
-    console.log('Dados recebidos na API:', body)
+    console.log('📋 Dados recebidos na API:', body)
     
     const {
       ownerName,
@@ -21,12 +24,33 @@ export async function POST(request: NextRequest) {
       dailyRate,
       description,
       photos,
-      submittedAt
+      submittedAt,
+      acceptTerms
     } = body
+    
+    console.log('🔍 Body completo recebido:', JSON.stringify(body, null, 2))
+    console.log('🔍 Chaves disponíveis no body:', Object.keys(body))
+    
+    // Verificar se os campos existem com nomes diferentes
+    console.log('🔍 Valores extraídos:', {
+      ownerName: body.ownerName,
+      email: body.email,
+      phone: body.phone,
+      brand: body.brand,
+      model: body.model,
+      year: body.year,
+      category: body.category,
+      condition: body.condition,
+      dailyRate: body.dailyRate
+    })
 
     // Validar dados obrigatórios
+    console.log('🔍 Validando dados obrigatórios...')
+    const requiredFields = { ownerName, email, phone, brand, model, year, category, condition, dailyRate }
+    console.log('📋 Campos recebidos:', requiredFields)
+    
     if (!ownerName || !email || !phone || !brand || !model || !year || !category || !condition || !dailyRate) {
-      console.log('Dados obrigatórios faltando:', {
+      console.log('❌ Dados obrigatórios faltando:', {
         ownerName: !!ownerName,
         email: !!email,
         phone: !!phone,
@@ -42,6 +66,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    console.log('✅ Todos os dados obrigatórios presentes')
 
     // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -53,8 +78,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar telefone (formato mais flexível)
+    console.log('📞 Validando telefone:', phone, 'length:', phone.length)
     const phoneRegex = /^[\d\s\(\)\-\+]+$/
-    if (!phoneRegex.test(phone) || phone.length < 10) {
+    const phoneTest = phoneRegex.test(phone)
+    console.log('📞 Regex test:', phoneTest, 'length >= 10:', phone.length >= 10)
+    
+    if (!phoneTest || phone.length < 10) {
+      console.log('❌ Telefone inválido:', { phone, phoneTest, length: phone.length })
       return NextResponse.json(
         { error: 'Formato de telefone inválido. Use um formato válido como (21) 99999-9999' },
         { status: 400 }

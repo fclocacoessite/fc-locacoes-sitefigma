@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-const serverClient = createClient(supabaseUrl, supabaseKey)
+import { supabaseAdmin } from '@/lib/supabase-client'
 
 export async function PATCH(
   request: NextRequest,
@@ -33,7 +28,7 @@ export async function PATCH(
     }
 
     // Atualizar consignação
-    const { data, error } = await serverClient
+    const { data, error } = await supabaseAdmin
       .from('consignments')
       .update({ 
         status,
@@ -79,7 +74,7 @@ export async function DELETE(
     const { id } = params
 
     // Verificar se a consignação existe
-    const { data: existingConsignment, error: fetchError } = await serverClient
+    const { data: existingConsignment, error: fetchError } = await supabaseAdmin
       .from('consignments')
       .select('id')
       .eq('id', id)
@@ -93,7 +88,7 @@ export async function DELETE(
     }
 
     // Deletar consignação
-    const { error } = await serverClient
+    const { error } = await supabaseAdmin
       .from('consignments')
       .delete()
       .eq('id', id)

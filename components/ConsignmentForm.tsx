@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 
 export function ConsignmentForm() {
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     // Dados do proprietário
     ownerName: '',
@@ -105,6 +106,7 @@ export function ConsignmentForm() {
 
   // Função para registrar refs
   const registerRef = useCallback((name: string, ref: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null) => {
+    console.log('📝 Registrando ref:', name, !!ref)
     inputRefs.current[name] = ref
   }, [])
 
@@ -152,74 +154,71 @@ export function ConsignmentForm() {
   }
 
   const handleSubmit = async () => {
+    // Solução simplificada: coletar dados diretamente do DOM
+    const form = document.querySelector('form') || document
+    
+    // Coletar dados usando querySelector
+    const ownerName = (form.querySelector('input[name="ownerName"]') as HTMLInputElement)?.value || ''
+    const email = (form.querySelector('input[name="email"]') as HTMLInputElement)?.value || ''
+    const phone = (form.querySelector('input[name="phone"]') as HTMLInputElement)?.value || ''
+    const brand = (form.querySelector('input[name="brand"]') as HTMLInputElement)?.value || ''
+    const model = (form.querySelector('input[name="model"]') as HTMLInputElement)?.value || ''
+    const year = (form.querySelector('input[name="year"]') as HTMLInputElement)?.value || ''
+    const capacity = (form.querySelector('input[name="capacity"]') as HTMLInputElement)?.value || ''
+    const condition = (form.querySelector('select[name="condition"]') as HTMLSelectElement)?.value || ''
+    const mileage = (form.querySelector('input[name="mileage"]') as HTMLInputElement)?.value || ''
+    const dailyRate = (form.querySelector('input[name="dailyRate"]') as HTMLInputElement)?.value || ''
+    const description = (form.querySelector('textarea[name="description"]') as HTMLTextAreaElement)?.value || ''
+    const acceptTerms = (form.querySelector('input[name="acceptTerms"]') as HTMLInputElement)?.checked || false
+    
+    // Usar categoria do estado
+    const category = formData.category || ''
+    
+    console.log('📋 Dados coletados do DOM:', {
+      ownerName, email, phone, brand, model, year, category,
+      capacity, condition, mileage, dailyRate, description, acceptTerms
+    })
+    
+    // Validações básicas
+    if (!acceptTerms) {
+      alert('Você deve aceitar os termos de consignação')
+      return
+    }
+    
+    if (!ownerName || !email || !phone || !brand || !model || !year || !category || !condition || !dailyRate) {
+      alert('Preencha todos os campos obrigatórios')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
     try {
-      // Coletar dados dos inputs não controlados
-      const formData = new FormData()
-      const ownerName = inputRefs.current.ownerName?.value || ''
-      const email = inputRefs.current.email?.value || ''
-      const phone = inputRefs.current.phone?.value || ''
-      const brand = inputRefs.current.brand?.value || ''
-      const model = inputRefs.current.model?.value || ''
-      const year = inputRefs.current.year?.value || ''
-      const category = formData.category || ''
-      const capacity = inputRefs.current.capacity?.value || ''
-      const condition = inputRefs.current.condition?.value || ''
-      const mileage = inputRefs.current.mileage?.value || ''
-      const dailyRate = inputRefs.current.dailyRate?.value || ''
-      const description = inputRefs.current.description?.value || ''
-      const acceptTerms = (inputRefs.current.acceptTerms as HTMLInputElement)?.checked || false
-
       const payload = {
-        ownerName,
-        email,
-        phone,
-        brand,
-        model,
-        year,
-        category,
-        capacity,
-        condition,
-        mileage,
-        dailyRate,
-        description,
+        ownerName, email, phone, brand, model, year, category,
+        capacity, condition, mileage, dailyRate, description, acceptTerms,
         photos: uploadedFiles,
         submittedAt: new Date().toISOString()
       }
-
+      
+      console.log('🚀 Enviando:', payload)
+      
       const response = await fetch('/api/consignment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-
+      
       if (response.ok) {
-        toast.success('Solicitação de consignação enviada com sucesso!')
-        // Reset form
-        setFormData({
-          ownerName: '',
-          email: '',
-          phone: '',
-          brand: '',
-          model: '',
-          year: '',
-          category: '',
-          capacity: '',
-          condition: '',
-          mileage: '',
-          dailyRate: '',
-          description: '',
-          acceptTerms: false
-        })
-        setUploadedFiles([])
-        setCurrentStep(1)
+        alert('Solicitação enviada com sucesso!')
+        window.location.reload()
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Erro ao enviar solicitação')
+        alert(`Erro: ${error.error}`)
       }
     } catch (error) {
-      toast.error('Erro ao enviar solicitação. Tente novamente.')
+      alert('Erro ao enviar. Tente novamente.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -328,7 +327,7 @@ export function ConsignmentForm() {
           type="tel"
           placeholder="(21) 99999-9999"
           defaultValue={formData.phone}
-          onBlur={handleInputChange}
+          onBlur={handleInputBlur}
           onInput={handleInputChange}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
           autoComplete="tel"
@@ -468,8 +467,8 @@ export function ConsignmentForm() {
             id="condition"
             name="condition"
             defaultValue={formData.condition}
-            onBlur={handleInputChange}
-            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            onChange={handleInputBlur}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange"
           >
             <option value="">Selecione o estado</option>
@@ -508,7 +507,7 @@ export function ConsignmentForm() {
           name="description"
           placeholder="Descreva detalhes importantes sobre o veículo..."
           defaultValue={formData.description}
-          onBlur={handleInputChange}
+          onBlur={handleInputBlur}
           onInput={handleInputChange}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-fc-orange focus:border-fc-orange min-h-20"
           rows={4}
@@ -683,8 +682,8 @@ export function ConsignmentForm() {
           id="acceptTerms"
           name="acceptTerms"
           defaultChecked={formData.acceptTerms}
-          onBlur={handleInputChange}
-          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          onChange={handleInputBlur}
           className="mt-1 h-4 w-4 text-fc-orange focus:ring-fc-orange border-gray-300 rounded"
         />
         <div className="text-sm">
@@ -729,6 +728,37 @@ export function ConsignmentForm() {
 
   return (
     <div className="min-h-screen bg-fc-light-gray py-8">
+      {/* BOTÃO DE TESTE ABSOLUTO */}
+      <div style={{ 
+        position: 'fixed', 
+        top: '10px', 
+        right: '10px', 
+        zIndex: 9999,
+        backgroundColor: 'red',
+        padding: '10px',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer'
+      }}>
+        <button 
+          onClick={() => {
+            alert('TESTE: JavaScript funcionando!');
+            console.log('TESTE: Botão clicado!');
+          }}
+          style={{
+            backgroundColor: 'red',
+            color: 'white',
+            border: 'none',
+            padding: '10px',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          TESTE JS
+        </button>
+      </div>
+      
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -769,13 +799,26 @@ export function ConsignmentForm() {
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Button 
+                <button
+                  type="button"
                   onClick={handleSubmit}
-                  className="flex items-center fc-orange hover:bg-orange-600 text-white"
+                  disabled={isSubmitting}
+                  style={{
+                    backgroundColor: '#f97316',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: isSubmitting ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
                 >
-                  <Check className="w-4 h-4 mr-2" />
-                  Enviar Solicitação
-                </Button>
+                  <Check className="w-4 h-4" />
+                  {isSubmitting ? 'Enviando...' : 'Enviar Solicitação'}
+                </button>
               )}
             </div>
           </CardContent>

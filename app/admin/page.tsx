@@ -131,6 +131,11 @@ export default function AdminPage() {
   })
   const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [vehiclePhotos, setVehiclePhotos] = useState<VehicleImage[]>([])
+  
+  // Estados para modal de detalhes da consignação
+  const [selectedConsignment, setSelectedConsignment] = useState<Consignment | null>(null)
+  const [isConsignmentModalOpen, setIsConsignmentModalOpen] = useState(false)
+  
   const [vehicleForm, setVehicleForm] = useState({
     brand: '',
     model: '',
@@ -848,6 +853,17 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Erro ao excluir consignação:', error)
     }
+  }
+
+  // Funções para o modal de detalhes da consignação
+  const openConsignmentModal = (consignment: Consignment) => {
+    setSelectedConsignment(consignment)
+    setIsConsignmentModalOpen(true)
+  }
+
+  const closeConsignmentModal = () => {
+    setSelectedConsignment(null)
+    setIsConsignmentModalOpen(false)
   }
 
   const handleQuoteStatusUpdate = async (quoteId: string, newStatus: string) => {
@@ -1749,6 +1765,9 @@ export default function AdminPage() {
                         Veículo
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fotos
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Categoria
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1806,6 +1825,28 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            {consignment.photos && consignment.photos.length > 0 ? (
+                              <>
+                                <img
+                                  src={consignment.photos[0]}
+                                  alt="Foto do veículo"
+                                  className="h-12 w-12 object-cover rounded-lg border border-gray-200"
+                                />
+                                {consignment.photos.length > 1 && (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    +{consignment.photos.length - 1}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <span className="text-xs text-gray-400">Sem foto</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{consignment.category}</div>
                           {consignment.capacity && (
                             <div className="text-sm text-gray-500">
@@ -1847,6 +1888,13 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex space-x-2">
+                            <button
+                              onClick={() => openConsignmentModal(consignment)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Ver detalhes"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
                             <select
                               value={consignment.status}
                               onChange={(e) => handleConsignmentStatusUpdate(consignment.id, e.target.value)}
@@ -1872,6 +1920,204 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              )}
+              
+              {/* Modal de Detalhes da Consignação */}
+              {isConsignmentModalOpen && selectedConsignment && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                  <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Detalhes da Consignação - {selectedConsignment.id}
+                      </h3>
+                      <button
+                        onClick={closeConsignmentModal}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <XCircle className="h-6 w-6" />
+                      </button>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Informações do Proprietário */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Proprietário</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 w-20">Nome:</span>
+                            <span className="text-gray-900">{selectedConsignment.owner_name}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-gray-900">{selectedConsignment.email}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                            <span className="text-gray-900">{selectedConsignment.phone}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Informações do Veículo */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Veículo</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="font-medium text-gray-700">Marca/Modelo:</span>
+                            <span className="text-gray-900 ml-2">{selectedConsignment.brand} {selectedConsignment.model}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Ano:</span>
+                            <span className="text-gray-900 ml-2">{selectedConsignment.year}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Categoria:</span>
+                            <span className="text-gray-900 ml-2">{selectedConsignment.category}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Condição:</span>
+                            <span className="text-gray-900 ml-2">{selectedConsignment.condition}</span>
+                          </div>
+                          {selectedConsignment.mileage && (
+                            <div>
+                              <span className="font-medium text-gray-700">Quilometragem:</span>
+                              <span className="text-gray-900 ml-2">{selectedConsignment.mileage.toLocaleString()} km</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-medium text-gray-700">Diária Pretendida:</span>
+                            <span className="text-gray-900 ml-2">R$ {selectedConsignment.daily_rate.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Descrição */}
+                    {selectedConsignment.description && (
+                      <div className="mt-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-2">Observações</h4>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-gray-700">{selectedConsignment.description}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Fotos do Veículo */}
+                    {selectedConsignment.photos && selectedConsignment.photos.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Fotos do Veículo</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {selectedConsignment.photos.map((photo, index) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={photo}
+                                alt={`Foto ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90"
+                                onClick={() => {
+                                  // Abrir foto em nova aba
+                                  window.open(photo, '_blank')
+                                }}
+                              />
+                              <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                {index + 1}/{selectedConsignment.photos.length}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-2">Clique na foto para visualizar em tamanho completo</p>
+                      </div>
+                    )}
+                    
+                    {/* Status e Datas */}
+                    <div className="mt-6 grid md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="text-md font-medium text-gray-900 mb-2">Status</h4>
+                        <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                          selectedConsignment.status === 'pending' 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : selectedConsignment.status === 'approved'
+                            ? 'bg-green-100 text-green-800'
+                            : selectedConsignment.status === 'rejected'
+                            ? 'bg-red-100 text-red-800'
+                            : selectedConsignment.status === 'active'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedConsignment.status === 'pending' && 'Pendente'}
+                          {selectedConsignment.status === 'approved' && 'Aprovada'}
+                          {selectedConsignment.status === 'rejected' && 'Rejeitada'}
+                          {selectedConsignment.status === 'active' && 'Ativa'}
+                          {selectedConsignment.status === 'completed' && 'Concluída'}
+                        </span>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="text-md font-medium text-gray-900 mb-2">Datas</h4>
+                        <div className="space-y-1 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">Submetida:</span>
+                            <span className="text-gray-900 ml-2">
+                              {new Date(selectedConsignment.submitted_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Atualizada:</span>
+                            <span className="text-gray-900 ml-2">
+                              {new Date(selectedConsignment.updated_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Ações do Modal */}
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <select
+                        value={selectedConsignment.status}
+                        onChange={(e) => {
+                          handleConsignmentStatusUpdate(selectedConsignment.id, e.target.value)
+                          setSelectedConsignment({...selectedConsignment, status: e.target.value as any})
+                        }}
+                        className="border border-gray-300 rounded px-3 py-2"
+                      >
+                        <option value="pending">Pendente</option>
+                        <option value="approved">Aprovada</option>
+                        <option value="rejected">Rejeitada</option>
+                        <option value="active">Ativa</option>
+                        <option value="completed">Concluída</option>
+                      </select>
+                      
+                      <button
+                        onClick={() => {
+                          handleDeleteConsignment(selectedConsignment.id)
+                          closeConsignmentModal()
+                        }}
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                      >
+                        Excluir Consignação
+                      </button>
+                      
+                      <button
+                        onClick={closeConsignmentModal}
+                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}

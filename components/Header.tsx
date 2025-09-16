@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 export function Header() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
@@ -190,19 +191,12 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <a
-              href="/consignacao"
-              className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Consignar Veículo
-            </a>
             {!isAdmin && (
-              <a
-                href="/orcamento"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
-              >
-                Solicitar Orçamento
-              </a>
+              <Link href="/orcamento">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg">
+                  Solicitar Orçamento
+                </Button>
+              </Link>
             )}
           </div>
         </div>
