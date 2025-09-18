@@ -1,10 +1,22 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
 
 export function Footer() {
   const { user } = useAuth()
+  
+  // Debug: Log do usuário no footer
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 Footer: Usuário detectado:', {
+        email: user.email,
+        role: user.user_metadata?.role,
+        isAdmin: user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager'
+      })
+    }
+  }, [user])
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -69,7 +81,7 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4 text-white">Acesso</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/auth/signin" className="text-gray-300 hover:text-orange-500 transition-colors duration-300 text-sm">
+                <Link href="/portal-cliente/login" className="text-gray-300 hover:text-orange-500 transition-colors duration-300 text-sm">
                   Portal do Cliente
                 </Link>
               </li>

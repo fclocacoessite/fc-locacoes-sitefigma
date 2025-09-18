@@ -171,6 +171,10 @@ CREATE TABLE IF NOT EXISTS public.consignments (
     photos TEXT[] DEFAULT '{}',
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'active', 'completed')),
     submitted_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    approved_at TIMESTAMP WITH TIME ZONE,
+    rejected_at TIMESTAMP WITH TIME ZONE,
+    rejection_reason TEXT,
+    admin_notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

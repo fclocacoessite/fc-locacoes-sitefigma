@@ -34,8 +34,16 @@ export function ResponsiveHeader() {
   useEffect(() => {
     if (!session || !user) return
 
+    console.log('🔄 ResponsiveHeader: Verificando redirecionamento...', {
+      isAdmin,
+      isClient,
+      pathname,
+      userRole: user.user_metadata?.role
+    })
+
     // Se for cliente e tentar acessar /admin, redireciona para /
     if (isClient && pathname.startsWith('/admin')) {
+      console.log('🔄 ResponsiveHeader: Cliente tentando acessar /admin, redirecionando para /')
       router.replace('/')
       return
     }
@@ -64,6 +72,7 @@ export function ResponsiveHeader() {
     { name: 'Início', href: '/' },
     { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
+    { name: 'Consignação', href: '/consignacao' },
     { name: 'Orçamento', href: '/orcamento' },
     { name: 'Contato', href: '/contato' },
   ]
@@ -137,7 +146,7 @@ export function ResponsiveHeader() {
             {/* Área de autenticação - responsiva */}
             <div className="flex items-center space-x-1">
               {!session ? (
-                <div className="text-white text-xs">Carregando...</div>
+                <div className="text-white text-xs">Acesse sua conta</div>
               ) : user ? (
                 <div className="flex items-center space-x-1">
                   {/* Nome do usuário - oculto em mobile muito pequeno */}

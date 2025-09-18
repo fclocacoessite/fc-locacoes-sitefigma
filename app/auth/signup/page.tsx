@@ -27,7 +27,36 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [consignmentId, setConsignmentId] = useState('')
+  const [redirectTo, setRedirectTo] = useState('')
   const router = useRouter()
+
+  // Preencher dados da URL se disponíveis
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const email = urlParams.get('email')
+      const name = urlParams.get('name')
+      const consignmentIdParam = urlParams.get('consignmentId')
+      const redirect = urlParams.get('redirect')
+      
+      if (email || name) {
+        setFormData(prev => ({
+          ...prev,
+          email: email || prev.email,
+          name: name || prev.name
+        }))
+      }
+      
+      if (consignmentIdParam) {
+        setConsignmentId(consignmentIdParam)
+      }
+      
+      if (redirect) {
+        setRedirectTo(redirect)
+      }
+    }
+  }, [])
 
   // Verificar se já está logado
   useEffect(() => {
@@ -38,13 +67,13 @@ export default function SignUpPage() {
         if (userRole === 'admin' || userRole === 'manager') {
           router.push('/admin')
         } else {
-          router.push('/portal-cliente')
+          router.push(redirectTo || '/portal-cliente')
         }
       }
     }
     
     checkSession()
-  }, [router])
+  }, [router, redirectTo])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -92,7 +121,11 @@ export default function SignUpPage() {
         setSuccess(true)
         // Redirecionar após 3 segundos
         setTimeout(() => {
-          router.push('/auth/signin')
+          if (redirectTo) {
+            router.push(redirectTo)
+          } else {
+            router.push('/auth/signin')
+          }
         }, 3000)
       }
     } catch (err) {
@@ -146,6 +179,13 @@ export default function SignUpPage() {
           <p className="mt-2 text-sm text-gray-600">
             Crie sua conta para acessar o portal do cliente
           </p>
+          {consignmentId && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-800">
+                <strong>Consignação #{consignmentId}</strong> - Após criar sua conta, você poderá acompanhar o status da sua consignação no portal do cliente.
+              </p>
+            </div>
+          )}
         </div>
 
         <Card>

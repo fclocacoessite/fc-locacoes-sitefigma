@@ -32,7 +32,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (initialized) return
       
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔄 AuthProvider: Obtendo sessão inicial...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('❌ Erro ao obter sessão:', error)
+        } else {
+          console.log('✅ Sessão obtida:', session ? 'Usuário logado' : 'Usuário não logado')
+        }
+        
         if (mounted) {
           setSession(session)
           setUser(session?.user ?? null)
@@ -40,7 +48,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setInitialized(true)
         }
       } catch (error) {
-        console.error('Erro ao obter sessão:', error)
+        console.error('❌ Erro ao obter sessão:', error)
         if (mounted) {
           setLoading(false)
           setInitialized(true)
@@ -53,14 +61,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Escutar mudanças de autenticação apenas após inicialização
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
-        if (!mounted || !initialized) return
+        if (!mounted) return
+        
+        console.log('🔄 AuthProvider: Mudança de autenticação:', event)
         
         // Só processar eventos importantes para evitar re-renderizações desnecessárias
         if (event === 'SIGNED_IN') {
+          console.log('✅ AuthProvider: Usuário logado:', {
+            email: session?.user?.email,
+            role: session?.user?.user_metadata?.role
+          })
           setSession(session)
           setUser(session?.user ?? null)
           setLoading(false)
         } else if (event === 'SIGNED_OUT') {
+          console.log('❌ AuthProvider: Usuário deslogado')
           setSession(null)
           setUser(null)
           setLoading(false)

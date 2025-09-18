@@ -31,6 +31,7 @@ export function MobileHeader() {
     { name: 'Início', href: '/' },
     { name: 'Sobre', href: '/sobre' },
     { name: 'Frota', href: '/frota' },
+    { name: 'Consignação', href: '/consignacao' },
     { name: 'Orçamento', href: '/orcamento' },
     { name: 'Contato', href: '/contato' },
   ]
@@ -95,7 +96,7 @@ export function MobileHeader() {
             {/* Área de autenticação */}
             <div className="flex items-center space-x-4">
               {!session ? (
-                <div className="text-white text-xs">Carregando...</div>
+                <div className="text-white text-xs">Acesse sua conta</div>
               ) : user ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>

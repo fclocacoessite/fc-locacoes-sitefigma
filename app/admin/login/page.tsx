@@ -35,6 +35,10 @@ export default function AdminLoginPage() {
           if (userRole === 'admin' || userRole === 'manager') {
             console.log('🔄 Usuário já logado, redirecionando...')
             router.replace('/admin') // Usar replace em vez de push
+          } else {
+            // Se for cliente, redireciona para portal do cliente
+            console.log('🔄 Usuário é cliente, redirecionando para portal...')
+            router.replace('/portal-cliente')
           }
         }
       } catch (error) {
@@ -48,7 +52,7 @@ export default function AdminLoginPage() {
     return () => {
       isMounted = false
     }
-  }, []) // Remover dependência do router para evitar loop
+  }, [router]) // Adicionar router como dependência
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,8 +194,13 @@ export default function AdminLoginPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <Link href="/auth/signin" className="text-sm text-gray-500 hover:text-gray-700">
+              <Link href="/portal-cliente/login" className="text-sm text-gray-500 hover:text-gray-700">
                 Portal do Cliente
+              </Link>
+            </div>
+            <div className="mt-2 text-center">
+              <Link href="/auth/reset-password" className="text-sm text-blue-600 hover:underline">
+                Esqueci minha senha
               </Link>
             </div>
           </CardContent>

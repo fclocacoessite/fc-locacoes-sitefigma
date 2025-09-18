@@ -16,18 +16,41 @@ export function Header() {
   const isAdmin = !!user && (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager')
   const isClient = !!user && user.user_metadata?.role === 'client'
 
+  // Debug: Log do usuário e role
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 Header: Usuário detectado:', {
+        email: user.email,
+        role: user.user_metadata?.role,
+        isAdmin,
+        isClient,
+        pathname
+      })
+    }
+  }, [user, isAdmin, isClient, pathname])
+
   // Redirecionamentos baseados no tipo de usuário
   useEffect(() => {
     if (!session || !user) return
 
+    console.log('🔄 Header: Verificando redirecionamento...', {
+      isAdmin,
+      isClient,
+      pathname,
+      userRole: user.user_metadata?.role
+    })
+
+    // TEMPORARIAMENTE DESABILITADO PARA DEBUG
     // Se for admin e estiver em página institucional, redireciona para /admin
-    if (isAdmin && !pathname.startsWith('/admin')) {
-      router.replace('/admin')
-      return
-    }
+    // if (isAdmin && !pathname.startsWith('/admin')) {
+    //   console.log('🔄 Header: Admin em página institucional, redirecionando para /admin')
+    //   router.replace('/admin')
+    //   return
+    // }
 
     // Se for cliente e tentar acessar /admin, redireciona para /
     if (isClient && pathname.startsWith('/admin')) {
+      console.log('🔄 Header: Cliente tentando acessar /admin, redirecionando para /')
       router.replace('/')
       return
     }
@@ -120,7 +143,7 @@ export function Header() {
             {/* Área de autenticação */}
             <div className="flex items-center space-x-1">
               {!session ? (
-                <div className="text-white text-xs">Carregando...</div>
+                <div className="text-white text-xs">Acesse sua conta</div>
               ) : user ? (
                 <div className="flex items-center space-x-1">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
@@ -144,7 +167,7 @@ export function Header() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-1">
-                  <Link href="/auth/signin">
+              <Link href="/portal-cliente/login">
                     <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors">
                       Cliente
                     </button>

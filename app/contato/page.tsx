@@ -14,6 +14,38 @@ import {
 } from 'lucide-react'
 
 export default function ContatoPage() {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    const payload = {
+      name: String(formData.get('name') || ''),
+      email: String(formData.get('email') || ''),
+      phone: String(formData.get('phone') || ''),
+      subject: String(formData.get('subject') || ''),
+      message: String(formData.get('message') || ''),
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(`Falha ao enviar mensagem: ${err.error || res.statusText}`)
+        return
+      }
+
+      alert('Mensagem enviada com sucesso!')
+      form.reset()
+    } catch (error) {
+      console.error('Erro ao enviar contato:', error)
+      alert('Erro ao enviar mensagem. Tente novamente mais tarde.')
+    }
+  }
   const socialLinks = [
     {
       name: 'Instagram',
@@ -200,7 +232,7 @@ export default function ContatoPage() {
               Envie uma Mensagem
             </h2>
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

@@ -19,7 +19,25 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectTo, setRedirectTo] = useState('')
   const router = useRouter()
+
+  // Preencher dados da URL se disponíveis
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const emailParam = urlParams.get('email')
+      const redirect = urlParams.get('redirect')
+      
+      if (emailParam) {
+        setEmail(emailParam)
+      }
+      
+      if (redirect) {
+        setRedirectTo(redirect)
+      }
+    }
+  }, [])
 
   // Verificar se já está logado e escutar mudanças de autenticação
   useEffect(() => {
@@ -27,10 +45,14 @@ export default function SignInPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         const userRole = session.user.user_metadata?.role || 'client'
+        console.log('🔍 Verificando sessão existente:', { userRole, email: session.user.email })
+        
         if (userRole === 'admin' || userRole === 'manager') {
-          router.push('/admin')
+          console.log('🔄 Admin detectado, redirecionando para /admin')
+          router.replace('/admin')
         } else {
-          router.push('/portal-cliente')
+          console.log('🔄 Cliente detectado, redirecionando para portal')
+          router.replace(redirectTo || '/portal-cliente')
         }
       }
     }
@@ -42,17 +64,21 @@ export default function SignInPage() {
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           const userRole = session.user.user_metadata?.role || 'client'
+          console.log('🔍 Login detectado:', { userRole, email: session.user.email })
+          
           if (userRole === 'admin' || userRole === 'manager') {
-            router.push('/admin')
+            console.log('🔄 Admin logado, redirecionando para /admin')
+            router.replace('/admin')
           } else {
-            router.push('/portal-cliente')
+            console.log('🔄 Cliente logado, redirecionando para portal')
+            router.replace(redirectTo || '/portal-cliente')
           }
         }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [router, redirectTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +95,14 @@ export default function SignInPage() {
         setError(error.message)
       } else if (data.user) {
         const userRole = data.user.user_metadata?.role || 'client'
+        console.log('🔍 Login manual detectado:', { userRole, email: data.user.email })
+        
         if (userRole === 'admin' || userRole === 'manager') {
-          router.push('/admin')
+          console.log('🔄 Admin logado manualmente, redirecionando para /admin')
+          router.replace('/admin')
         } else {
-          router.push('/portal-cliente')
+          console.log('🔄 Cliente logado manualmente, redirecionando para portal')
+          router.replace(redirectTo || '/portal-cliente')
         }
       }
     } catch (err) {

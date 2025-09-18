@@ -21,53 +21,102 @@ export function RouteProtection({
   redirectTo = '/',
   fallback 
 }: RouteProtectionProps) {
-  const [isLoading, setIsLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [userRole, setUserRole] = useState<string>('')
+  const [forceTimeout, setForceTimeout] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { user, session } = useAuth()
+  const { user, session, loading } = useAuth()
+
+  // Timeout de segurança para evitar travamento
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log('⚠️ RouteProtection: Timeout atingido, forçando resolução')
+      setForceTimeout(true)
+    }, 10000) // 10 segundos
+
+    return () => clearTimeout(timeout)
+  }, [])
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('🔍 RouteProtection: Verificando autenticação...', { 
+          loading, 
+          hasSession: !!session, 
+          hasUser: !!user,
+          userRole: user?.user_metadata?.role 
+        })
+
+        // Se ainda está carregando a autenticação e não atingiu timeout, aguardar
+        if (loading && !forceTimeout) {
+          console.log('⏳ RouteProtection: Ainda carregando autenticação...')
+          return
+        }
+
         if (!session || !user) {
+          console.log('❌ RouteProtection: Usuário não autenticado')
           setIsAuthorized(false)
-          setIsLoading(false)
+          setUserRole('')
+          // Redirecionamento automático quando não autenticado, se redirectTo foi fornecido
+          if (redirectTo) {
+            console.log('➡️ RouteProtection: Redirecionando para', redirectTo)
+            router.replace(redirectTo)
+          }
           return
         }
 
         const role = user.user_metadata?.role || 'client'
         setUserRole(role)
         
+        console.log('🔍 RouteProtection: Verificando permissões...', { 
+          userRole: role, 
+          allowedRoles 
+        })
+        
         if (allowedRoles.includes(role as any)) {
+          console.log('✅ RouteProtection: Acesso autorizado')
           setIsAuthorized(true)
         } else {
+          console.log('❌ RouteProtection: Acesso negado')
           setIsAuthorized(false)
+          // Redirecionar automaticamente para a rota apropriada quando não autorizado
+          if (redirectTo) {
+            console.log('➡️ RouteProtection: Redirecionando (sem permissão) para', redirectTo)
+            router.replace(redirectTo)
+          }
         }
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error)
+        console.error('❌ RouteProtection: Erro ao verificar autenticação:', error)
         setIsAuthorized(false)
-      } finally {
-        setIsLoading(false)
       }
     }
 
     checkAuth()
-  }, [session, user, allowedRoles])
+  }, [session, user, allowedRoles, loading, forceTimeout])
 
-  if (isLoading) {
+  if (loading && !forceTimeout) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Verificando acesso...</p>
+          {forceTimeout && (
+            <p className="text-sm text-orange-600 mt-2">
+              Demorando mais que o esperado...
+            </p>
+          )}
         </div>
       </div>
     )
   }
 
   if (!isAuthorized) {
+    // Escolher rota de login adequada para o botão secundário
+    const loginHref = allowedRoles.includes('client')
+      ? '/portal-cliente/login'
+      : '/admin/login'
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
@@ -94,7 +143,7 @@ export function RouteProtection({
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full">
-                <Link href="/auth/signin">
+                <Link href={loginHref}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Fazer Login
                 </Link>
