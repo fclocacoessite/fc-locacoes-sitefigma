@@ -171,6 +171,16 @@ export default function AdminPage() {
   const [editingText, setEditingText] = useState<number | null>(null)
   const [editingData, setEditingData] = useState({ text: '', label: '' })
 
+  // Estados para gerenciamento de usuários
+  const [users, setUsers] = useState<any[]>([])
+  const [usersFilter, setUsersFilter] = useState('all')
+  const [usersSearchTerm, setUsersSearchTerm] = useState('')
+  const [usersSortBy, setUsersSortBy] = useState('created_at')
+  const [usersSortOrder, setUsersSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [showUserModal, setShowUserModal] = useState(false)
+  const [userActionLoading, setUserActionLoading] = useState<string | null>(null)
+
   // Verificar autenticação
   useEffect(() => {
     const checkAuth = async () => {
@@ -282,6 +292,9 @@ export default function AdminPage() {
         console.warn('Erro ao carregar consignações:', error)
         setConsignments([])
       }
+
+      // Carregar usuários da API
+      await loadUsers()
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
     } finally {
@@ -914,6 +927,83 @@ export default function AdminPage() {
       alert('Erro ao excluir orçamento. Tente novamente.')
     }
   }
+
+  // Funções para gerenciamento de usuários
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data.users || [])
+      } else {
+        console.error('Erro ao carregar usuários')
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error)
+    }
+  }
+
+  const handleUserAction = async (userId: string, action: string, data?: any) => {
+    setUserActionLoading(userId)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          action,
+          data
+        })
+      })
+
+      if (response.ok) {
+        // Recarregar lista de usuários
+        await loadUsers()
+        alert('Ação executada com sucesso!')
+      } else {
+        const error = await response.json()
+        alert(`Erro: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Erro ao executar ação:', error)
+      alert('Erro ao executar ação. Tente novamente.')
+    } finally {
+      setUserActionLoading(null)
+    }
+  }
+
+  // Filtros e ordenação de usuários
+  const filteredUsers = users
+    .filter(user => {
+      if (usersFilter === 'all') return true
+      if (usersFilter === 'admin') return user.role === 'admin'
+      if (usersFilter === 'client') return user.role === 'client'
+      if (usersFilter === 'banned') return user.is_banned
+      return true
+    })
+    .filter(user => {
+      if (!usersSearchTerm) return true
+      const searchLower = usersSearchTerm.toLowerCase()
+      return user.name.toLowerCase().includes(searchLower) || 
+             user.email.toLowerCase().includes(searchLower)
+    })
+    .sort((a, b) => {
+      let aValue = a[usersSortBy]
+      let bValue = b[usersSortBy]
+      
+      if (usersSortBy === 'created_at' || usersSortBy === 'last_sign_in_at') {
+        aValue = new Date(aValue).getTime()
+        bValue = new Date(bValue).getTime()
+      }
+      
+      if (usersSortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
 
   // Funções para gerenciar os textos do top bar
   const startEditing = (id: number) => {
@@ -2125,12 +2215,201 @@ export default function AdminPage() {
           {activeTab === 'users' && (
             <div className="bg-white rounded-lg shadow">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Gestão de Usuários</h3>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Gestão de Usuários</h3>
+                    <p className="text-sm text-gray-600 mt-1">Gerencie usuários, roles e permissões do sistema</p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setUsersFilter('all')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        usersFilter === 'all' 
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Todos ({users.length})
+                    </button>
+                    <button
+                      onClick={() => setUsersFilter('admin')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        usersFilter === 'admin' 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Admins ({users.filter(u => u.role === 'admin').length})
+                    </button>
+                    <button
+                      onClick={() => setUsersFilter('client')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        usersFilter === 'client' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Clientes ({users.filter(u => u.role === 'client').length})
+                    </button>
+                    <button
+                      onClick={() => setUsersFilter('banned')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        usersFilter === 'banned' 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Banidos ({users.filter(u => u.is_banned).length})
+                    </button>
+                  </div>
+                </div>
               </div>
+              
               <div className="p-6">
-                <p className="text-gray-500 text-center py-8">
-                  Funcionalidade de gestão de usuários em desenvolvimento.
-                </p>
+                {/* Filtros e busca */}
+                <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Buscar por nome ou email..."
+                      value={usersSearchTerm}
+                      onChange={(e) => setUsersSearchTerm(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex space-x-2">
+                    <select
+                      value={usersSortBy}
+                      onChange={(e) => setUsersSortBy(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="created_at">Data de criação</option>
+                      <option value="name">Nome</option>
+                      <option value="email">Email</option>
+                      <option value="last_sign_in_at">Último acesso</option>
+                    </select>
+                    <button
+                      onClick={() => setUsersSortOrder(usersSortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {usersSortOrder === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lista de usuários */}
+                <div className="space-y-4">
+                  {filteredUsers.map((user) => (
+                    <div key={user.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            {user.avatar_url ? (
+                              <img src={user.avatar_url} alt={user.name} className="w-12 h-12 rounded-full object-cover" />
+                            ) : (
+                              <span className="text-gray-600 font-medium text-lg">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{user.name}</h4>
+                            <p className="text-sm text-gray-600">{user.email}</p>
+                            <p className="text-xs text-gray-500">
+                              {user.phone} • {user.provider}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right">
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                user.role === 'admin' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : user.role === 'manager'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {user.role === 'admin' ? 'Admin' : user.role === 'manager' ? 'Gerente' : 'Cliente'}
+                              </span>
+                              {user.is_banned && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Banido
+                                </span>
+                              )}
+                              {user.email_confirmed_at && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Verificado
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Criado em {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                            {user.last_sign_in_at && (
+                              <p className="text-xs text-gray-500">
+                                Último acesso: {new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowUserModal(true)
+                              }}
+                              className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                            >
+                              Editar
+                            </button>
+                            {user.role !== 'admin' && (
+                              <>
+                                {user.is_banned ? (
+                                  <button
+                                    onClick={() => handleUserAction(user.id, 'unban')}
+                                    className="px-3 py-1 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
+                                  >
+                                    Desbanir
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleUserAction(user.id, 'ban')}
+                                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                                  >
+                                    Banir
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    if (confirm('Tem certeza que deseja deletar este usuário? Esta ação não pode ser desfeita.')) {
+                                      handleUserAction(user.id, 'delete')
+                                    }
+                                  }}
+                                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                                >
+                                  Deletar
+                                </button>
+                              </>
+                            )}
+                            {user.role === 'admin' && (
+                              <span className="px-3 py-1 text-sm text-gray-500 italic">
+                                Protegido
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {filteredUsers.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Nenhum usuário encontrado com os filtros aplicados.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -2648,6 +2927,186 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Usuário */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Editar Usuário - {selectedUser.name}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowUserModal(false)
+                    setSelectedUser(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Informações do usuário */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedUser.name}
+                      onChange={(e) => setSelectedUser({...selectedUser, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={selectedUser.email}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telefone
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedUser.phone}
+                      onChange={(e) => setSelectedUser({...selectedUser, phone: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Role
+                    </label>
+                    {selectedUser.role === 'admin' ? (
+                      <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500">
+                        Administrador (Protegido)
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedUser.role}
+                        onChange={(e) => setSelectedUser({...selectedUser, role: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="client">Cliente</option>
+                        <option value="manager">Gerente</option>
+                        <option value="admin">Administrador</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status do usuário */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Status do Usuário</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="email_verified"
+                        checked={!!selectedUser.email_confirmed_at}
+                        disabled
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="email_verified" className="text-sm text-gray-700">
+                        Email verificado
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {selectedUser.role === 'admin' ? (
+                        <>
+                          <input
+                            type="checkbox"
+                            id="is_banned"
+                            checked={false}
+                            disabled
+                            className="h-4 w-4 text-gray-400 border-gray-300 rounded"
+                          />
+                          <label htmlFor="is_banned" className="text-sm text-gray-500">
+                            Usuário banido (Protegido)
+                          </label>
+                        </>
+                      ) : (
+                        <>
+                          <input
+                            type="checkbox"
+                            id="is_banned"
+                            checked={selectedUser.is_banned}
+                            onChange={(e) => setSelectedUser({...selectedUser, is_banned: e.target.checked})}
+                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="is_banned" className="text-sm text-gray-700">
+                            Usuário banido
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informações de data */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Informações de Data</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Criado em:</span> {new Date(selectedUser.created_at).toLocaleString('pt-BR')}
+                    </div>
+                    <div>
+                      <span className="font-medium">Último acesso:</span> {selectedUser.last_sign_in_at ? new Date(selectedUser.last_sign_in_at).toLocaleString('pt-BR') : 'Nunca'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões de ação */}
+              <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserModal(false)
+                    setSelectedUser(null)
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    handleUserAction(selectedUser.id, 'update_metadata', {
+                      name: selectedUser.name,
+                      phone: selectedUser.phone,
+                      role: selectedUser.role
+                    })
+                    setShowUserModal(false)
+                    setSelectedUser(null)
+                  }}
+                  disabled={userActionLoading === selectedUser.id}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {userActionLoading === selectedUser.id ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Salvando...
+                    </div>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
