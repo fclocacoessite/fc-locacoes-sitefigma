@@ -5,7 +5,6 @@ import { Vehicle } from '@/lib/supabase'
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
 import { FleetSearchFilter } from '@/components/FleetSearchFilter'
-import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 
 // Array de veículos com imagens locais e descrições detalhadas
 const localVehicles = [
@@ -668,9 +667,6 @@ export default function FrotaPage() {
           </div>
         </div>
       </div>
-
-      {/* Consign Floating Button */}
-      <ConsignFloatingButton />
 
       {/* Footer */}
       <Footer />

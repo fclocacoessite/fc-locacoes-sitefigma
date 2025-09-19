@@ -4,50 +4,16 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, Shield, User, LogOut, Home, FileText, Truck, Calculator, Phone, Settings } from 'lucide-react'
+import { Menu, X, LogOut, User, Home, FileText, Truck, Calculator, Phone, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function ResponsiveHeader() {
-  const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
+export function AdminHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
   const { user, session, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
-  // Detectar tipos de usuário
-  const isAdmin = !!user && (user.user_metadata?.role === 'admin' || user.user_metadata?.role === 'manager')
-  const isClient = !!user && user.user_metadata?.role === 'client'
-
-  // Detectar tamanho da tela
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    checkScreenSize()
-    window.addEventListener('resize', checkScreenSize)
-    return () => window.removeEventListener('resize', checkScreenSize)
-  }, [])
-
-  // Redirecionamentos baseados no tipo de usuário
-  useEffect(() => {
-    if (!session || !user) return
-
-    console.log('🔄 ResponsiveHeader: Verificando redirecionamento...', {
-      isAdmin,
-      isClient,
-      pathname,
-      userRole: user.user_metadata?.role
-    })
-
-    // Se for cliente e tentar acessar /admin, redireciona para /
-    if (isClient && pathname.startsWith('/admin')) {
-      console.log('🔄 ResponsiveHeader: Cliente tentando acessar /admin, redirecionando para /')
-      router.replace('/')
-      return
-    }
-  }, [session, user, isClient, pathname, router])
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -62,20 +28,20 @@ export function ResponsiveHeader() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentInfoIndex((prev) => (prev + 1) % topBarInfo.length)
-    }, 3000)
+    }, 3000) // Muda a cada 3 segundos
 
     return () => clearInterval(interval)
   }, [topBarInfo.length])
 
-  // Navegação para todos os usuários
+  // Navegação específica para admin
   const navigation = [
     { name: 'Início', href: '/', icon: Home },
-    { name: 'Sobre', href: '/sobre', icon: User },
     { name: 'Frota', href: '/frota', icon: Truck },
-    { name: 'Consignação', href: '/consignacao', icon: FileText },
     { name: 'Orçamento', href: '/orcamento', icon: Calculator },
+    { name: 'Consignação', href: '/consignacao', icon: FileText },
     { name: 'Contato', href: '/contato', icon: Phone },
   ]
+
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -122,59 +88,30 @@ export function ResponsiveHeader() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      {/* Top Bar - Responsivo */}
+    <div className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+      {/* Top Bar */}
       <div className="bg-gray-800 text-white py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center text-sm">
-            {/* Informações rotativas - adaptadas para mobile */}
+            {/* Informações rotativas centralizadas */}
             <div className="flex-1 flex justify-center">
               <div className="flex items-center space-x-2 text-center">
                 <div className="flex items-center space-x-1">
                   {getIcon(topBarInfo[currentInfoIndex].icon)}
-                  <span className="font-medium text-xs sm:text-sm">
-                    {topBarInfo[currentInfoIndex].text}
-                  </span>
+                  <span className="font-medium">{topBarInfo[currentInfoIndex].text}</span>
                 </div>
                 <span className="text-gray-400 text-xs hidden sm:inline">•</span>
-                <span className="text-gray-400 text-xs hidden sm:inline">
-                  {topBarInfo[currentInfoIndex].label}
-                </span>
+                <span className="text-gray-400 text-xs hidden sm:inline">{topBarInfo[currentInfoIndex].label}</span>
               </div>
             </div>
             
-            {/* Área de autenticação - responsiva */}
+            {/* Área de autenticação */}
             <div className="flex items-center space-x-1">
               {!session ? (
                 <div className="text-white text-xs">Acesse sua conta</div>
               ) : user ? (
                 <div className="flex items-center space-x-1">
-                  {/* Nome do usuário - oculto em mobile muito pequeno */}
-                  <span className="text-white text-xs hidden xs:inline">
-                    Olá, {user.user_metadata?.name || user.email}
-                  </span>
-                  
-                  
-                  {/* Botão Portal - só para admins */}
-                  {isAdmin && (
-                    <Link href="/admin">
-                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors flex items-center space-x-1">
-                        <Settings className="w-3 h-3" />
-                        <span className="hidden sm:inline">Portal</span>
-                      </button>
-                    </Link>
-                  )}
-                  
-                  {/* Botão Área do Cliente - só para não-admins */}
-                  {!isAdmin && (
-                    <Link href="/portal-cliente">
-                      <button className="bg-orange-500 hover:bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs font-medium transition-colors flex items-center space-x-1">
-                        <User className="w-3 h-3" />
-                        <span className="hidden sm:inline">Portal</span>
-                      </button>
-                    </Link>
-                  )}
-                  
+                  <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>
                   
                   <button
                     onClick={handleSignOut}
@@ -199,26 +136,26 @@ export function ResponsiveHeader() {
         </div>
       </div>
 
-      {/* Main Navigation - Responsivo */}
+      {/* Main Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo - Responsivo */}
+          {/* Logo */}
           <div className="flex items-center">
-            <a href={isAdmin ? "/admin" : "/"} className="flex-shrink-0 flex items-center space-x-2 sm:space-x-3">
+            <a href="/admin" className="flex-shrink-0 flex items-center space-x-3">
               <img 
                 src="/logo-fc.jpg" 
                 alt="FC Locações" 
-                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg"
+                className="w-12 h-12 object-cover rounded-lg"
               />
               <div className="text-gray-800">
-                <div className="font-bold text-lg sm:text-xl">FC Locações</div>
-                <div className="text-xs text-gray-600 hidden sm:block">Caminhões Munck & Cestos Aéreos</div>
+                <div className="font-bold text-xl">FC Locações</div>
+                <div className="text-xs text-gray-600">Caminhões Munck & Cestos Aéreos</div>
               </div>
             </a>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex space-x-6 xl:space-x-8">
+          <nav className="hidden md:flex space-x-6 xl:space-x-8">
             {navigation.map((item) => (
               <a
                 key={item.name}
@@ -231,21 +168,19 @@ export function ResponsiveHeader() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-3">
-            {!isAdmin && (
-              <Link href="/orcamento">
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-4 lg:px-6 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
-                  Solicitar Orçamento
-                </Button>
-              </Link>
-            )}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link href="/orcamento">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg">
+                Solicitar Orçamento
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-orange-500 transition-colors p-2"
+              className="text-gray-700 hover:text-orange-500 transition-colors"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -260,30 +195,16 @@ export function ResponsiveHeader() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                  className="px-4 py-3 text-sm font-medium text-gray-700 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all duration-200"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
                 </a>
               ))}
               
-              {/* Botão Área do Cliente no menu mobile para usuários logados */}
-              {user && !isAdmin && (
-                <Link href="/portal-cliente">
-                  <button 
-                    className="w-full text-left px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Área do Cliente
-                  </button>
-                </Link>
-              )}
-              
-              
-              
               <a
                 href="/orcamento"
-                className="px-3 py-2 text-sm font-medium bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-center"
+                className="px-4 py-3 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-center mt-4"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Solicitar Orçamento
@@ -292,6 +213,6 @@ export function ResponsiveHeader() {
           </div>
         )}
       </div>
-    </header>
+    </div>
   )
 }

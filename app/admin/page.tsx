@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Quote, supabase } from '@/lib/supabase'
-import { MobileHeader } from '@/components/MobileHeader'
+import { AdminHeader } from '@/components/AdminHeader'
 
 type Consignment = {
   id: string
@@ -998,7 +998,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MobileHeader />
+      <AdminHeader />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">

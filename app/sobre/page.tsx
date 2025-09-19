@@ -2,7 +2,6 @@
 
 import { Footer } from '@/components/Footer'
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
-import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 import { 
   Users, 
   Award, 
@@ -438,9 +437,6 @@ export default function SobrePage() {
           </div>
         </div>
       </section>
-
-      {/* Consign Floating Button */}
-      <ConsignFloatingButton />
 
       {/* Footer */}
       <Footer />

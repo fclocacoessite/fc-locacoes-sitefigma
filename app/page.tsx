@@ -1,5 +1,4 @@
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
-import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 
 export default function Home() {
   return (
@@ -450,9 +449,6 @@ export default function Home() {
         </div>
       </section>
 
-
-      {/* Consign Floating Button */}
-      <ConsignFloatingButton />
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-12">

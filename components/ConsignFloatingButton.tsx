@@ -1,81 +1,99 @@
 'use client'
 
-import { useAuth } from '@/app/providers'
 import Link from 'next/link'
 import { Truck, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export function ConsignFloatingButton() {
-  const { session, user } = useAuth()
-  const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
 
-  // Verificar se foi dispensado anteriormente
-  useEffect(() => {
-    const dismissed = localStorage.getItem('consign-floating-dismissed')
-    if (dismissed === 'true') {
-      setIsDismissed(true)
-    }
-  }, [])
+  // Debug log
+  console.log('ConsignFloatingButton renderizado, isDismissed:', isDismissed)
 
-  // Mostrar o botão apenas se não estiver logado e não foi dispensado
-  useEffect(() => {
-    if (!session && !isDismissed) {
-      // Mostrar após 5 segundos para não ser muito intrusivo
-      const timer = setTimeout(() => {
-        setIsVisible(true)
-      }, 5000)
-      
-      return () => clearTimeout(timer)
-    }
-  }, [session, isDismissed])
-
-  // Não mostrar se estiver logado ou foi dispensado
-  if (session || isDismissed || !isVisible) {
+  // Não mostrar se foi dispensado
+  if (isDismissed) {
     return null
   }
 
   const handleDismiss = () => {
     setIsDismissed(true)
-    setIsVisible(false)
     // Salvar no localStorage para não mostrar novamente na sessão
-    localStorage.setItem('consign-floating-dismissed', 'true')
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('consign-floating-dismissed', 'true')
+    }
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <div className="bg-gray-900 text-white rounded-lg shadow-lg p-4 max-w-sm animate-in slide-in-from-bottom-2 duration-300">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <Truck className="w-5 h-5 text-orange-500" />
-            <span className="font-semibold text-sm">Consignar Veículo</span>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <div 
+      style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        zIndex: 50,
+        backgroundColor: 'rgba(17, 24, 39, 0.8)',
+        backdropFilter: 'blur(4px)',
+        color: 'white',
+        borderRadius: '8px',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        padding: '16px',
+        maxWidth: '320px',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Truck style={{ width: '20px', height: '20px', color: '#f97316' }} />
+          <span style={{ fontWeight: '600', fontSize: '14px' }}>Consignar Veículo</span>
         </div>
-        
-        <p className="text-xs text-gray-300 mb-3">
-          Ganhe dinheiro consignando seu veículo conosco
-        </p>
-        
-        <div className="flex space-x-2">
-          <Link
-            href="/consignacao"
-            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-xs font-medium transition-colors text-center"
-          >
-            Consignar Agora
-          </Link>
-          <button
-            onClick={handleDismiss}
-            className="px-3 py-2 text-xs text-gray-400 hover:text-white transition-colors"
-          >
-            Depois
-          </button>
-        </div>
+        <button
+          onClick={handleDismiss}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#9ca3af',
+            cursor: 'pointer',
+            padding: '4px'
+          }}
+        >
+          <X style={{ width: '16px', height: '16px' }} />
+        </button>
+      </div>
+      
+      <p style={{ fontSize: '12px', color: '#d1d5db', marginBottom: '12px' }}>
+        Ganhe dinheiro consignando seu veículo conosco
+      </p>
+      
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <Link
+          href="/consignacao"
+          style={{
+            flex: 1,
+            backgroundColor: '#f97316',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            textAlign: 'center',
+            textDecoration: 'none',
+            display: 'block'
+          }}
+        >
+          Consignar Agora
+        </Link>
+        <button
+          onClick={handleDismiss}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#9ca3af',
+            padding: '8px 12px',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          Depois
+        </button>
       </div>
     </div>
   )

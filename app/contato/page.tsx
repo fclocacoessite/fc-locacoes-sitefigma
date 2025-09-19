@@ -2,7 +2,6 @@
 
 import { ResponsiveHeader } from '@/components/ResponsiveHeader'
 import { Footer } from '@/components/Footer'
-import { ConsignFloatingButton } from '@/components/ConsignFloatingButton'
 import { 
   Phone, 
   Mail, 
@@ -351,9 +350,6 @@ export default function ContatoPage() {
           </div>
         </div>
       </div>
-
-      {/* Consign Floating Button */}
-      <ConsignFloatingButton />
 
       {/* Footer */}
       <Footer />

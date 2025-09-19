@@ -190,7 +190,7 @@ export default function ConsignacaoPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 text-center">
+        <div className="max-w-lg w-full space-y-8 text-center">
           <div>
             <div className="mx-auto h-24 w-24 bg-green-100 rounded-full flex items-center justify-center">
               <svg className="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,10 +201,44 @@ export default function ConsignacaoPage() {
             <p className="mt-2 text-sm text-gray-600">
               Recebemos sua solicitação de consignação. Entraremos em contato em até 24 horas para agendar uma vistoria.
             </p>
-            <div className="mt-6">
+            
+            {/* Informações sobre o Portal do Cliente */}
+            <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="flex items-center justify-center mb-2">
+                <svg className="h-5 w-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-sm font-medium text-orange-900">Acompanhe sua Consignação</h3>
+              </div>
+              <p className="text-xs text-orange-700 mb-4">
+                Para acompanhar o status da sua consignação em tempo real, crie uma conta ou faça login no portal do cliente.
+              </p>
+              <div className="space-y-2">
+                <a
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center w-full px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
+                >
+                  <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  Criar Conta
+                </a>
+                <a
+                  href="/portal-cliente/login"
+                  className="inline-flex items-center justify-center w-full px-3 py-2 border border-orange-300 text-xs font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 transition-colors"
+                >
+                  <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  Já tenho conta - Fazer Login
+                </a>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
               <a
                 href="/"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
               >
                 Voltar ao Início
               </a>

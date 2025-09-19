@@ -52,6 +52,34 @@ export async function PATCH(
       )
     }
 
+    // Se a consignação foi aprovada, criar veículo automaticamente
+    if (status === 'approved') {
+      try {
+        console.log('🚗 Criando veículo a partir da consignação aprovada')
+        
+        const vehicleResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/vehicles/create-from-consignment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            consignmentId: id
+          })
+        })
+
+        const vehicleData = await vehicleResponse.json()
+        
+        if (vehicleData.success) {
+          console.log('✅ Veículo criado com sucesso na frota:', vehicleData.vehicle.id)
+        } else {
+          console.warn('⚠️ Erro ao criar veículo (não crítico):', vehicleData.error)
+        }
+      } catch (vehicleError) {
+        console.warn('⚠️ Erro ao criar veículo (não crítico):', vehicleError)
+        // Não falhar a aprovação se der erro na criação do veículo
+      }
+    }
+
     return NextResponse.json({ 
       success: true,
       consignment: data[0]
