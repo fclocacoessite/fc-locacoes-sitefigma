@@ -26,7 +26,7 @@ export function RouteProtection({
   const [forceTimeout, setForceTimeout] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { user, session, loading } = useAuth()
+  const { user, session, loading, isLoggingOut } = useAuth()
 
   // Timeout de segurança para evitar travamento
   useEffect(() => {
@@ -106,6 +106,18 @@ export function RouteProtection({
               Demorando mais que o esperado...
             </p>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  // Se estiver fazendo logout, mostrar loading para evitar flash da mensagem
+  if (isLoggingOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Saindo...</p>
         </div>
       </div>
     )

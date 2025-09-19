@@ -7,7 +7,7 @@ import Link from 'next/link'
 export function MobileHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
-  const { user, session, signOut } = useAuth()
+  const { user, session, signOut, isLoggingOut } = useAuth()
 
   // Informações rotativas para o top bar
   const topBarInfo = [
@@ -114,9 +114,17 @@ export function MobileHeader() {
                       console.log('Botão Sair clicado!')
                       signOut()
                     }}
-                    className="border border-white/20 hover:bg-white/10 text-white px-2 py-1 rounded text-xs transition-colors"
+                    disabled={isLoggingOut}
+                    className="border border-white/20 hover:bg-white/10 text-white px-2 py-1 rounded text-xs transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Sair
+                    {isLoggingOut ? (
+                      <>
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        Saindo...
+                      </>
+                    ) : (
+                      'Sair'
+                    )}
                   </button>
                 </div>
               ) : (

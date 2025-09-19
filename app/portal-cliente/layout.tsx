@@ -17,7 +17,7 @@ export default function ClientPortalLayout({
 
   return (
     <RouteProtection 
-      allowedRoles={['client']} 
+      allowedRoles={['client', 'admin', 'manager']} 
       redirectTo="/portal-cliente/login"
     >
       {children}

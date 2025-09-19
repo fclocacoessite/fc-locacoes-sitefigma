@@ -20,9 +20,11 @@ export async function PUT(
       }
     })
     
-    // Sempre atualizar o timestamp
-    fieldsToUpdate.updated_at = new Date().toISOString()
+    // Remover campos que podem não existir na tabela
+    delete fieldsToUpdate.updated_at
+    delete fieldsToUpdate.created_at
     
+    // Fazer a atualização diretamente
     const { data: vehicle, error } = await supabase
       .from('vehicles')
       .update(fieldsToUpdate)
@@ -33,18 +35,17 @@ export async function PUT(
     if (error) {
       console.error('Erro ao atualizar veículo:', error)
       return NextResponse.json(
-        { error: 'Erro ao atualizar veículo' },
+        { error: 'Erro ao atualizar veículo', details: error.message },
         { status: 500 }
       )
     }
 
     if (!vehicle) {
       return NextResponse.json(
-        { error: 'Veículo não encontrado' },
+        { error: 'Veículo não encontrado após atualização' },
         { status: 404 }
       )
     }
-
 
     return NextResponse.json({ vehicle })
   } catch (error) {
@@ -62,6 +63,21 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
+    
+    // Primeiro verificar se o veículo existe
+    const { data: existingVehicle, error: checkError } = await supabase
+      .from('vehicles')
+      .select('id')
+      .eq('id', id)
+      .single()
+
+    if (checkError || !existingVehicle) {
+      console.error('Veículo não encontrado:', checkError)
+      return NextResponse.json(
+        { error: 'Veículo não encontrado' },
+        { status: 404 }
+      )
+    }
     
     const { error } = await supabase
       .from('vehicles')

@@ -8,6 +8,7 @@ type AuthContextType = {
   user: User | null
   session: Session | null
   loading: boolean
+  isLoggingOut: boolean
   signOut: () => Promise<void>
 }
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  isLoggingOut: false,
   signOut: async () => {},
 })
 
@@ -23,6 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -93,6 +96,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       console.log('Fazendo logout...')
+      setIsLoggingOut(true)
       
       // Fazer logout do Supabase primeiro
       const { error } = await supabase.auth.signOut()
@@ -102,11 +106,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
         console.log('Logout realizado com sucesso')
       }
       
+      // Pequeno delay para evitar flash da mensagem de restrição
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
       // Limpar estado local
       setUser(null)
       setSession(null)
       
-      // Redirecionar imediatamente
+      // Redirecionar
       window.location.href = '/'
       
     } catch (error) {
@@ -115,11 +122,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       setUser(null)
       setSession(null)
       window.location.href = '/'
+    } finally {
+      setIsLoggingOut(false)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isLoggingOut, signOut }}>
       {children}
     </AuthContext.Provider>
   )

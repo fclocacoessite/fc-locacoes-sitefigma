@@ -11,10 +11,9 @@ import {
   CreditCard, 
   Settings, 
   LogOut, 
-  Truck, 
-  Plus 
+  Truck,
+  Plus
 } from 'lucide-react'
-import { ClientConsignmentForm } from '@/components/ClientConsignmentForm'
 
 interface UserData {
   id: string
@@ -38,7 +37,7 @@ interface Consignment {
   daily_rate: number
   description?: string
   photos: string[]
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'active'
   submitted_at: string
   approved_at?: string
   rejected_at?: string
@@ -47,11 +46,10 @@ interface Consignment {
 }
 
 export default function PortalClientePage() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isLoggingOut } = useAuth()
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [showConsignmentForm, setShowConsignmentForm] = useState(false)
   const [consignments, setConsignments] = useState<Consignment[]>([])
   const [loadingConsignments, setLoadingConsignments] = useState(false)
 
@@ -159,13 +157,35 @@ export default function PortalClientePage() {
                 <p className="text-sm font-medium text-gray-900">{userData?.email}</p>
                 <p className="text-xs text-gray-500">{userData?.role}</p>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 w-full sm:w-auto"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </button>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                {/* Mostrar botão do painel admin se for admin ou manager */}
+                {(userData?.role === 'admin' || userData?.role === 'manager') && (
+                  <button
+                    onClick={() => router.push('/admin')}
+                    className="flex items-center justify-center px-3 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 w-full sm:w-auto"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Painel Admin
+                  </button>
+                )}
+                <button
+                  onClick={handleSignOut}
+                  disabled={isLoggingOut}
+                  className="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <div className="w-4 h-4 border border-gray-700 border-t-transparent rounded-full animate-spin mr-2" />
+                      Saindo...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -188,7 +208,7 @@ export default function PortalClientePage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-1 sm:space-x-2 whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-orange-500 text-orange-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -312,7 +332,7 @@ export default function PortalClientePage() {
                   {consignments.length > 3 && (
                     <button
                       onClick={() => setActiveTab('consignments')}
-                      className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
+                      className="w-full text-center text-sm text-orange-600 hover:text-orange-800"
                     >
                       Ver todas as {consignments.length} consignações
                     </button>
@@ -332,7 +352,7 @@ export default function PortalClientePage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => setActiveTab('quotes')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600"
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Ver Orçamentos
@@ -397,20 +417,22 @@ export default function PortalClientePage() {
                 <h3 className="text-lg font-medium text-gray-900">Minhas Consignações</h3>
                 <p className="text-sm text-gray-500">Gerencie seus veículos em consignação</p>
               </div>
-              <button
-                onClick={() => setShowConsignmentForm(true)}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              <a
+                href="/consignacao"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Consignação
-              </button>
+              </a>
             </div>
 
             {/* Lista de consignações */}
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               {loadingConsignments ? (
                 <div className="p-6 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
                   <p className="mt-2 text-gray-600">Carregando consignações...</p>
                 </div>
               ) : (
@@ -483,13 +505,15 @@ export default function PortalClientePage() {
                   Comece consignando seu primeiro veículo.
                 </p>
                 <div className="mt-6">
-                  <button
-                    onClick={() => setShowConsignmentForm(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  <a
+                    href="/consignacao"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Nova Consignação
-                  </button>
+                  </a>
                 </div>
               </div>
             )}
@@ -554,19 +578,6 @@ export default function PortalClientePage() {
         )}
       </div>
 
-      {/* Modal de Nova Consignação */}
-      {showConsignmentForm && (
-        <ClientConsignmentForm
-          onClose={() => setShowConsignmentForm(false)}
-          onSuccess={() => {
-            // Atualizar lista de consignações
-            fetchConsignments()
-            console.log('Consignação criada com sucesso!')
-          }}
-          userEmail={userData?.email || ''}
-          userName={userData?.name || ''}
-        />
-      )}
       
       {/* Footer do Portal - Fixo na parte inferior */}
       <footer className="bg-white border-t border-gray-200 mt-auto">

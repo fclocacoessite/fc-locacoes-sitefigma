@@ -4,9 +4,11 @@ import { useCallback } from 'react'
  * Hook simplificado para gerenciar o foco de campos de entrada
  */
 export function useFocusManager() {
-  const handleFocus = useCallback((element: HTMLInputElement | HTMLTextAreaElement) => {
+  const handleFocus = useCallback((element: HTMLInputElement | HTMLTextAreaElement | null) => {
     // Apenas garantir que o elemento tenha foco
-    element.focus()
+    if (element && typeof element.focus === 'function') {
+      element.focus()
+    }
   }, [])
 
   const handleBlur = useCallback(() => {

@@ -32,14 +32,10 @@ export default function ClientPortalLoginPage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (session && isMounted) {
           const userRole = session.user.user_metadata?.role || 'client'
-          if (userRole === 'client') {
-            console.log('🔄 Cliente já logado, redirecionando...')
-            router.replace('/portal-cliente')
-          } else if (userRole === 'admin' || userRole === 'manager') {
-            // Se for admin, redireciona para portal admin
-            console.log('🔄 Usuário é admin, redirecionando para portal admin...')
-            router.replace('/admin')
-          }
+          // Sempre redirecionar para o portal do cliente se já estiver logado
+          // (independente da role, pois agora admins também podem acessar)
+          console.log('🔄 Usuário já logado, redirecionando para portal do cliente...')
+          router.replace('/portal-cliente')
         }
       } catch (error) {
         console.error('Erro ao verificar sessão:', error)
@@ -90,16 +86,10 @@ export default function ClientPortalLoginPage() {
           userId: data.user.id
         })
         
-        if (userRole === 'client') {
-          console.log('🔄 Redirecionando para /portal-cliente...')
-          router.replace('/portal-cliente')
-        } else if (userRole === 'admin' || userRole === 'manager') {
-          console.log('🔄 Admin detectado, redirecionando para /admin...')
-          router.replace('/admin')
-        } else {
-          console.log('🚫 Acesso negado - role:', userRole)
-          setError('Acesso negado. Role de usuário não reconhecido.')
-        }
+        // Sempre redirecionar para o portal do cliente após login bem-sucedido
+        // (agora admins também podem acessar o portal do cliente)
+        console.log('🔄 Login bem-sucedido, redirecionando para /portal-cliente...')
+        router.replace('/portal-cliente')
       } else {
         console.error('❌ Nenhum usuário retornado')
         setError('Erro: Nenhum usuário retornado')

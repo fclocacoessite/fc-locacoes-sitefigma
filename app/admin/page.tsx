@@ -408,6 +408,24 @@ export default function AdminPage() {
   // Funções para edição de veículos
   const openEditModal = (vehicle: AdminVehicle) => {
     setEditingVehicle(vehicle)
+    
+    // Mapear status do banco para o frontend
+    const mapStatusToFrontend = (dbStatus: string | null) => {
+      switch (dbStatus) {
+        case 'disponivel':
+        case 'available':
+          return 'available'
+        case 'alugado':
+        case 'rented':
+          return 'rented'
+        case 'manutencao':
+        case 'maintenance':
+          return 'maintenance'
+        default:
+          return 'available'
+      }
+    }
+    
     setEditForm({
       brand: vehicle.brand,
       model: vehicle.model,
@@ -427,7 +445,7 @@ export default function AdminPage() {
       carroceria_aberta: vehicle.carroceria_aberta ?? false,
       banheiro: vehicle.banheiro ?? false,
       documents: vehicle.documents?.join(', ') || '',
-      status: vehicle.status || 'available',
+      status: mapStatusToFrontend(vehicle.status),
       featured: vehicle.featured ?? false
     })
     
@@ -484,6 +502,20 @@ export default function AdminPage() {
     setUpdatingVehicle(editingVehicle.id)
     setUpdateProgress('Preparando dados...')
     try {
+      // Mapear status do frontend para o banco de dados
+      const mapStatusToDatabase = (frontendStatus: string) => {
+        switch (frontendStatus) {
+          case 'available':
+            return 'disponivel'
+          case 'rented':
+            return 'alugado'
+          case 'maintenance':
+            return 'manutencao'
+          default:
+            return 'disponivel'
+        }
+      }
+      
       // Preparar payload apenas com campos que mudaram (otimização)
       const payload: any = {
         brand: editForm.brand,
@@ -508,7 +540,7 @@ export default function AdminPage() {
         documents: editForm.documents
           ? editForm.documents.split(',').map(s => s.trim()).filter(Boolean)
           : [],
-        status: editForm.status,
+        status: mapStatusToDatabase(editForm.status),
         featured: Boolean(editForm.featured)
       }
 
@@ -1610,15 +1642,17 @@ export default function AdminPage() {
                             <div className="flex items-center">
                               <div className="w-24 flex-shrink-0">
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                  vehicle.status === 'available' 
+                                  (vehicle.status === 'available' || vehicle.status === 'disponivel')
                                     ? 'bg-green-100 text-green-800' 
-                                    : vehicle.status === 'rented'
+                                    : (vehicle.status === 'rented' || vehicle.status === 'alugado')
                                     ? 'bg-pink-100 text-pink-800'
+                                    : (vehicle.status === 'maintenance' || vehicle.status === 'manutencao')
+                                    ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {vehicle.status === 'available' ? 'Disponível' : 
-                                   vehicle.status === 'rented' ? 'Locado' : 
-                                   vehicle.status === 'maintenance' ? 'Manutenção' : 'Indisponível'}
+                                  {(vehicle.status === 'available' || vehicle.status === 'disponivel') ? 'Disponível' : 
+                                   (vehicle.status === 'rented' || vehicle.status === 'alugado') ? 'Locado' : 
+                                   (vehicle.status === 'maintenance' || vehicle.status === 'manutencao') ? 'Manutenção' : 'Indisponível'}
                                 </span>
                               </div>
                               <div className="w-32 flex-shrink-0 ml-4">

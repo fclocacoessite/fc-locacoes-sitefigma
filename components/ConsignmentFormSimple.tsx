@@ -117,6 +117,20 @@ export function ConsignmentFormSimple() {
     const formData = new FormData(formRef.current)
     const data = Object.fromEntries(formData.entries())
 
+    // Validar campos obrigatórios
+    const requiredFields = ['ownerName', 'email', 'phone', 'brand', 'model', 'year', 'category', 'condition', 'dailyRate']
+    const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '')
+    
+    if (missingFields.length > 0) {
+      toast.error(`Campos obrigatórios não preenchidos: ${missingFields.join(', ')}`)
+      return
+    }
+
+    if (data.acceptTerms !== 'on') {
+      toast.error('Você deve aceitar os termos e condições')
+      return
+    }
+
     try {
       const payload = {
         ownerName: data.ownerName,
@@ -135,6 +149,8 @@ export function ConsignmentFormSimple() {
         photos: uploadedFiles,
         submittedAt: new Date().toISOString()
       }
+
+      console.log('📤 Enviando dados:', payload)
 
       const response = await fetch('/api/consignment', {
         method: 'POST',

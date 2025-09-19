@@ -169,14 +169,14 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
           <div key={step.number} className="flex items-center">
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
               currentStep >= step.number
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-500 text-white'
                 : 'bg-gray-200 text-gray-600'
             }`}>
               {currentStep > step.number ? <CheckCircle className="w-4 h-4" /> : step.number}
             </div>
             <div className="ml-3 hidden sm:block">
               <p className={`text-sm font-medium ${
-                currentStep >= step.number ? 'text-blue-600' : 'text-gray-500'
+                currentStep >= step.number ? 'text-orange-600' : 'text-gray-500'
               }`}>
                 {step.title}
               </p>
@@ -184,7 +184,7 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
             </div>
             {index < steps.length - 1 && (
               <div className={`hidden sm:block w-16 h-0.5 ml-4 ${
-                currentStep > step.number ? 'bg-blue-600' : 'bg-gray-200'
+                currentStep > step.number ? 'bg-orange-500' : 'bg-gray-200'
               }`} />
             )}
           </div>
@@ -193,7 +193,7 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
       <div className="mt-4">
         <div className="bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-orange-500 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -204,7 +204,7 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
   const Step1 = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <User className="mx-auto h-12 w-12 text-blue-600" />
+        <User className="mx-auto h-12 w-12 text-orange-500" />
         <h3 className="mt-2 text-lg font-medium text-gray-900">Dados do Proprietário</h3>
         <p className="mt-1 text-sm text-gray-500">Confirme suas informações pessoais</p>
       </div>
@@ -250,7 +250,7 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
   const Step2 = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <Car className="mx-auto h-12 w-12 text-blue-600" />
+        <Car className="mx-auto h-12 w-12 text-orange-500" />
         <h3 className="mt-2 text-lg font-medium text-gray-900">Dados do Veículo</h3>
         <p className="mt-1 text-sm text-gray-500">Informações sobre o veículo a ser consignado</p>
       </div>
@@ -375,7 +375,7 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
   const Step3 = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <Camera className="mx-auto h-12 w-12 text-blue-600" />
+        <Camera className="mx-auto h-12 w-12 text-orange-500" />
         <h3 className="mt-2 text-lg font-medium text-gray-900">Fotos do Veículo</h3>
         <p className="mt-1 text-sm text-gray-500">Adicione fotos para melhor avaliação (opcional)</p>
       </div>
@@ -485,11 +485,11 @@ export function ClientConsignmentForm({ onClose, onSuccess, userEmail, userName 
           type="checkbox"
           checked={formData.acceptTerms}
           onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
         />
         <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
           Eu aceito os{' '}
-          <a href="/termos-uso" className="text-blue-600 hover:text-blue-500">
+          <a href="/termos-uso" className="text-orange-600 hover:text-orange-500">
             termos e condições
           </a>{' '}
           para consignação de veículos

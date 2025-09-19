@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 
 export function Header() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
-  const { user, session, signOut } = useAuth()
+  const { user, session, signOut, isLoggingOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -160,9 +160,17 @@ export function Header() {
                   
                   <button
                     onClick={() => signOut()}
-                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors"
+                    disabled={isLoggingOut}
+                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Sair
+                    {isLoggingOut ? (
+                      <>
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        Saindo...
+                      </>
+                    ) : (
+                      'Sair'
+                    )}
                   </button>
                 </div>
               ) : (

@@ -11,7 +11,7 @@ export function ResponsiveHeader() {
   const [currentInfoIndex, setCurrentInfoIndex] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const { user, session, signOut } = useAuth()
+  const { user, session, signOut, isLoggingOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -178,10 +178,20 @@ export function ResponsiveHeader() {
                   
                   <button
                     onClick={handleSignOut}
-                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1"
+                    disabled={isLoggingOut}
+                    className="border border-white/20 hover:bg-white/10 text-white px-1.5 py-0.5 rounded text-xs transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <LogOut className="w-3 h-3" />
-                    <span className="hidden sm:inline">Sair</span>
+                    {isLoggingOut ? (
+                      <>
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="hidden sm:inline">Saindo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="w-3 h-3" />
+                        <span className="hidden sm:inline">Sair</span>
+                      </>
+                    )}
                   </button>
                 </div>
               ) : (

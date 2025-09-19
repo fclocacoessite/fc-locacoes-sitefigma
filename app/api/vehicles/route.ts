@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     // Se não for visualização admin, mostrar veículos disponíveis, locados e em manutenção
+    // Aceitar tanto status em português quanto em inglês para compatibilidade
     if (!adminView) {
-      query = query.in('status', ['available', 'rented', 'maintenance'])
+      query = query.in('status', ['disponivel', 'alugado', 'manutencao', 'available', 'rented', 'maintenance'])
     }
 
     const { data: vehicles, error } = await query
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
       features: Array.isArray(body.features) ? body.features : [],
       photos: Array.isArray(body.photos) ? body.photos : [],
       documents: Array.isArray(body.documents) ? body.documents : [],
-      status: body.status ?? 'available',
+      status: body.status ?? 'disponivel',
       featured: !!body.featured,
     }
 
