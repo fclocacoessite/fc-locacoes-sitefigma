@@ -264,6 +264,15 @@ export default function FrotaPage() {
     }
   }, [])
 
+  // Garantir que, ao trocar de página, o scroll volte para a grade de veículos
+  useEffect(() => {
+    if (showAllVehicles) {
+      // pequeno atraso para garantir que o layout atualizou antes do scroll
+      const id = setTimeout(scrollToVehicles, 50)
+      return () => clearTimeout(id)
+    }
+  }, [currentPage, showAllVehicles, scrollToVehicles])
+
 
   // Navegação por teclado para o modal de visualização de fotos
   useEffect(() => {

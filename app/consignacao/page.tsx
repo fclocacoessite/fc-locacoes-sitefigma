@@ -53,52 +53,60 @@ export default function ConsignacaoPage() {
     })
   }
 
-  // Função para gerenciar upload de fotos
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files) return
-
+  // Função utilitária para validar/adicionar vários arquivos
+  const validateAndAddFiles = (files: FileList | File[]) => {
     const validFiles: File[] = []
     const previewUrls: string[] = []
     
-    // Validar cada arquivo
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      
-      // Validar tipo de arquivo
+      const file = (files as FileList)[i] || (files as File[])[i]
+      if (!file) continue
       if (!file.type.startsWith('image/')) {
         alert(`${file.name} não é uma imagem válida.`)
         continue
       }
-      
-      // Validar tamanho (máximo 5MB por foto)
       if (file.size > 5 * 1024 * 1024) {
         alert(`${file.name} é muito grande. Tamanho máximo: 5MB.`)
         continue
       }
-      
       validFiles.push(file)
       previewUrls.push(URL.createObjectURL(file))
     }
 
-    // Limitar a 6 fotos no total
     const totalPhotos = photos.length + validFiles.length
     if (totalPhotos > 6) {
       alert('Você pode adicionar no máximo 6 fotos.')
       const allowedFiles = validFiles.slice(0, 6 - photos.length)
       const allowedPreviews = previewUrls.slice(0, 6 - photos.length)
-      
       setPhotos(prev => [...prev, ...allowedFiles])
       setPhotoPreviewUrls(prev => [...prev, ...allowedPreviews])
     } else {
       setPhotos(prev => [...prev, ...validFiles])
       setPhotoPreviewUrls(prev => [...prev, ...previewUrls])
     }
+  }
 
-    // Limpar o input
+  // Upload via seleção de arquivos
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) return
+    validateAndAddFiles(files)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  // Suporte a arrastar-e-soltar múltiplas fotos
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      validateAndAddFiles(event.dataTransfer.files)
+      event.dataTransfer.clearData()
+    }
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
   }
 
   // Função para remover foto
@@ -460,8 +468,12 @@ export default function ConsignacaoPage() {
                   Adicione fotos do veículo para ajudar na avaliação (máximo 6 fotos, 5MB cada)
                 </p>
                 
-                {/* Botão de upload */}
-                <div className="mb-4">
+                {/* Área de upload com suporte a múltiplos arquivos e drag-and-drop */}
+                <div
+                  className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-orange-400 transition-colors"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -483,6 +495,7 @@ export default function ConsignacaoPage() {
                   <span className="ml-2 text-sm text-gray-500">
                     {photos.length}/6 fotos
                   </span>
+                  <p className="mt-3 text-xs text-gray-500">Dica: você pode arrastar e soltar várias imagens aqui ou segurar Ctrl/Shift ao selecionar arquivos.</p>
                 </div>
 
                 {/* Preview das fotos */}
