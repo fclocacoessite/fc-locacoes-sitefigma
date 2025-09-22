@@ -9,10 +9,13 @@ export default function Home() {
       <section id="inicio" className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1558618666-fbd51c2cd47a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+            src="/img/IMG%20frota/Gemini_Generated_Image_6umkbr6umkbr6umk.png"
             alt="Caminhões Munck em operação"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
+            loading="eager"
+            decoding="async"
           />
+          {/* Overlay para legibilidade do texto */}
           <div className="absolute inset-0 bg-gray-900/60"></div>
         </div>
 
