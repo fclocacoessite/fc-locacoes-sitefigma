@@ -348,10 +348,16 @@ export default function AdminPage() {
         featured: Boolean(vehicleForm.featured)
       }
 
+      const { data: __sessionCreate } = await supabase.auth.getSession()
+      const __accessTokenCreate = __sessionCreate?.session?.access_token
       const res = await fetch('/api/vehicles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: {
+          'Content-Type': 'application/json',
+          ...( __accessTokenCreate ? { Authorization: `Bearer ${__accessTokenCreate}` } : {}),
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include'
       })
 
       if (!res.ok) {
@@ -366,7 +372,13 @@ export default function AdminPage() {
 
       // Invalidar cache para sincronizar com o site público
       try {
-        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        const { data: __sessionCache1 } = await supabase.auth.getSession()
+        const __accessTokenCache1 = __sessionCache1?.session?.access_token
+        await fetch('/api/vehicles/invalidate-cache', { 
+          method: 'POST', 
+          credentials: 'include',
+          headers: { ...( __accessTokenCache1 ? { Authorization: `Bearer ${__accessTokenCache1}` } : {}) },
+        })
         console.log('✅ Cache invalidado - novo veículo adicionado')
       } catch (error) {
         console.warn('⚠️ Erro ao invalidar cache:', error)
@@ -568,10 +580,16 @@ export default function AdminPage() {
       }
 
       setUpdateProgress('Enviando dados...')
+      const { data: __sessionUpdate } = await supabase.auth.getSession()
+      const __accessTokenUpdate = __sessionUpdate?.session?.access_token
       const res = await fetch(`/api/vehicles/${editingVehicle.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: {
+          'Content-Type': 'application/json',
+          ...( __accessTokenUpdate ? { Authorization: `Bearer ${__accessTokenUpdate}` } : {}),
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include'
       })
 
       if (!res.ok) {
@@ -591,7 +609,13 @@ export default function AdminPage() {
 
       // Invalidar cache para sincronizar com o site público
       try {
-        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        const { data: __sessionCache2 } = await supabase.auth.getSession()
+        const __accessTokenCache2 = __sessionCache2?.session?.access_token
+        await fetch('/api/vehicles/invalidate-cache', { 
+          method: 'POST', 
+          credentials: 'include',
+          headers: { ...( __accessTokenCache2 ? { Authorization: `Bearer ${__accessTokenCache2}` } : {}) },
+        })
         console.log('✅ Cache invalidado - alterações sincronizadas')
       } catch (error) {
         console.warn('⚠️ Erro ao invalidar cache:', error)
@@ -612,8 +636,14 @@ export default function AdminPage() {
 
     setDeletingVehicle(vehicleId)
     try {
+      const { data: __sessionDelete } = await supabase.auth.getSession()
+      const __accessTokenDelete = __sessionDelete?.session?.access_token
       const res = await fetch(`/api/vehicles/${vehicleId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          ...( __accessTokenDelete ? { Authorization: `Bearer ${__accessTokenDelete}` } : {}),
+        },
+        credentials: 'include'
       })
 
       if (!res.ok) {
@@ -626,7 +656,13 @@ export default function AdminPage() {
 
       // Invalidar cache para sincronizar com o site público
       try {
-        await fetch('/api/vehicles/invalidate-cache', { method: 'POST' })
+        const { data: __sessionCache3 } = await supabase.auth.getSession()
+        const __accessTokenCache3 = __sessionCache3?.session?.access_token
+        await fetch('/api/vehicles/invalidate-cache', { 
+          method: 'POST', 
+          credentials: 'include',
+          headers: { ...( __accessTokenCache3 ? { Authorization: `Bearer ${__accessTokenCache3}` } : {}) },
+        })
         console.log('✅ Cache invalidado - veículo excluído')
       } catch (error) {
         console.warn('⚠️ Erro ao invalidar cache:', error)
@@ -887,6 +923,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/consignment/${consignmentId}`, {
         method: 'DELETE',
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -944,6 +981,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/quotes/${quoteId}`, {
         method: 'DELETE',
+        credentials: 'include'
       })
 
       if (response.ok) {

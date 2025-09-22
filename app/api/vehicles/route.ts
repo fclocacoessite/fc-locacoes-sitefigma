@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { createServerClient } from '@supabase/ssr'
 
 export async function GET(request: NextRequest) {
@@ -75,14 +75,46 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // Verificar se as variáveis de ambiente estão configuradas
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('❌ Variáveis de ambiente do Supabase não configuradas')
+      return NextResponse.json({ error: 'Configuração do servidor inválida' }, { status: 500 })
+    }
+
+    // Tentar autenticação via header Authorization: Bearer <token>
+    const authHeader = request.headers.get('authorization') || ''
+    const bearerToken = authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : null
+
+    let authenticatedUserId: string | null = null
+    let authenticatedUserRole: string = 'client'
+
+    if (bearerToken) {
+      try {
+        const { data: userData, error: userErr } = await supabase.auth.getUser(bearerToken)
+        if (!userErr && userData?.user) {
+          authenticatedUserId = userData.user.id
+          authenticatedUserRole = (userData.user.user_metadata as any)?.role || 'client'
+        }
+      } catch (e) {
+        // Ignorar e seguir para fallback por cookies
+      }
+    }
+
     // Criar cliente Supabase no servidor com cookies da request
     const serverClient = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            try {
+              return request.cookies.getAll() || []
+            } catch (error) {
+              console.error('Erro ao obter cookies:', error)
+              return []
+            }
           },
           setAll() {
             // noop: Next.js route handlers não permitem set direto em request cookies
@@ -91,17 +123,21 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Buscar sessão do usuário
-    const { data: { session }, error: sessionError } = await serverClient.auth.getSession()
-    if (sessionError) {
-      return NextResponse.json({ error: 'Falha ao obter sessão' }, { status: 401 })
-    }
-
-    const userId = session?.user?.id
-    const userRole = (session?.user?.user_metadata as any)?.role || 'client'
-
+    // Obter sessão via cookies se não autenticado por Authorization
+    let userId = authenticatedUserId
+    let userRole = authenticatedUserRole
     if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      try {
+        const { data, error: sessionError } = await serverClient.auth.getSession()
+        const session = data?.session
+        if (!session || sessionError) {
+          return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+        }
+        userId = session.user.id
+        userRole = (session.user.user_metadata as any)?.role || 'client'
+      } catch (error) {
+        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      }
     }
 
     // Construir payload com regras por role
@@ -127,11 +163,20 @@ export async function POST(request: NextRequest) {
     }
 
 
-    const { data: vehicle, error } = await serverClient
-      .from('vehicles')
-      .insert(payload)
-      .select()
-      .single()
+    // Executar inserção: se Authorization válido (admin/manager), usar supabaseAdmin
+    // caso contrário, usar serverClient (cookie session com RLS)
+    const useAdmin = userRole === 'admin' || userRole === 'manager'
+    const { data: vehicle, error } = useAdmin
+      ? await supabaseAdmin
+          .from('vehicles')
+          .insert(payload)
+          .select()
+          .single()
+      : await serverClient
+          .from('vehicles')
+          .insert(payload)
+          .select()
+          .single()
 
     if (error) {
       console.error('Erro ao criar veículo:', error)
