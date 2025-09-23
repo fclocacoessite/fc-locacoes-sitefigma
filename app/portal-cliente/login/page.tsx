@@ -32,10 +32,16 @@ export default function ClientPortalLoginPage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (session && isMounted) {
           const userRole = session.user.user_metadata?.role || 'client'
-          // Sempre redirecionar para o portal do cliente se já estiver logado
-          // (independente da role, pois agora admins também podem acessar)
-          console.log('🔄 Usuário já logado, redirecionando para portal do cliente...')
-          router.replace('/portal-cliente')
+          
+          // Se for admin/manager, redirecionar para a página de login do admin
+          if (userRole === 'admin' || userRole === 'manager') {
+            console.log('🔄 Admin detectado, redirecionando para login do admin...')
+            await supabase.auth.signOut() // Fazer logout primeiro
+            router.replace('/admin/login')
+          } else {
+            console.log('🔄 Cliente detectado, redirecionando para portal do cliente...')
+            router.replace('/portal-cliente')
+          }
         }
       } catch (error) {
         console.error('Erro ao verificar sessão:', error)
@@ -86,10 +92,17 @@ export default function ClientPortalLoginPage() {
           userId: data.user.id
         })
         
-        // Sempre redirecionar para o portal do cliente após login bem-sucedido
-        // (agora admins também podem acessar o portal do cliente)
-        console.log('🔄 Login bem-sucedido, redirecionando para /portal-cliente...')
-        router.replace('/portal-cliente')
+        // Verificar se é admin tentando fazer login no portal do cliente
+        if (userRole === 'admin' || userRole === 'manager') {
+          console.log('🚫 Admin tentando fazer login no portal do cliente')
+          setError('Acesso negado. Administradores devem usar o login específico do painel administrativo.')
+          // Fazer logout para limpar a sessão
+          await supabase.auth.signOut()
+          return
+        } else {
+          console.log('🔄 Cliente logado, redirecionando para /portal-cliente...')
+          router.replace('/portal-cliente')
+        }
       } else {
         console.error('❌ Nenhum usuário retornado')
         setError('Erro: Nenhum usuário retornado')
