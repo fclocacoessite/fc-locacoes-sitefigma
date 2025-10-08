@@ -58,11 +58,6 @@ export function RouteProtection({
           console.log('❌ RouteProtection: Usuário não autenticado')
           setIsAuthorized(false)
           setUserRole('')
-          // Redirecionamento automático quando não autenticado, se redirectTo foi fornecido
-          if (redirectTo) {
-            console.log('➡️ RouteProtection: Redirecionando para', redirectTo)
-            router.replace(redirectTo)
-          }
           return
         }
 
@@ -80,11 +75,6 @@ export function RouteProtection({
         } else {
           console.log('❌ RouteProtection: Acesso negado')
           setIsAuthorized(false)
-          // Redirecionar automaticamente para a rota apropriada quando não autorizado
-          if (redirectTo) {
-            console.log('➡️ RouteProtection: Redirecionando (sem permissão) para', redirectTo)
-            router.replace(redirectTo)
-          }
         }
       } catch (error) {
         console.error('❌ RouteProtection: Erro ao verificar autenticação:', error)
@@ -124,11 +114,6 @@ export function RouteProtection({
   }
 
   if (!isAuthorized) {
-    // Escolher rota de login adequada para o botão secundário
-    const loginHref = allowedRoles.includes('client')
-      ? '/portal-cliente/login'
-      : '/admin/login'
-
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
@@ -142,22 +127,26 @@ export function RouteProtection({
             <p className="text-gray-600">
               Você não tem permissão para acessar esta área.
             </p>
-            {userRole && (
+            {userRole ? (
               <p className="text-sm text-gray-500">
                 Seu nível de acesso: <span className="font-medium">{userRole}</span>
               </p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Você precisa fazer login com uma conta autorizada.
+              </p>
             )}
             <div className="space-y-2">
-              <Button asChild className="w-full">
+              <Button asChild className="w-full bg-orange-500 hover:bg-orange-600">
                 <Link href={redirectTo}>
-                  <Home className="h-4 w-4 mr-2" />
-                  Ir para o Site
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {userRole ? 'Trocar de Conta' : 'Fazer Login'}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full">
-                <Link href={loginHref}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Fazer Login
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Voltar ao Site
                 </Link>
               </Button>
             </div>

@@ -94,9 +94,26 @@ export function MobileHeader() {
             </div>
             
             {/* Área de autenticação */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               {!session ? (
-                <div className="text-white text-xs">Acesse sua conta</div>
+                <div className="flex items-center space-x-2">
+                  <Link href="/portal-cliente/login">
+                    <button className="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center space-x-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>Entrar</span>
+                    </button>
+                  </Link>
+                  <Link href="/auth/signup">
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center space-x-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      <span>Cadastre-se</span>
+                    </button>
+                  </Link>
+                </div>
               ) : user ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-white text-xs">Olá, {user.user_metadata?.name || user.email}</span>

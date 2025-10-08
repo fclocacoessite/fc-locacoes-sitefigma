@@ -18,7 +18,7 @@ export default function AdminLayout({
   return (
     <RouteProtection 
       allowedRoles={['admin', 'manager']} 
-      redirectTo="/"
+      redirectTo="/admin/login"
     >
       {children}
     </RouteProtection>
