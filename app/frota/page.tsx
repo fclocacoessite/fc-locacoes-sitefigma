@@ -186,14 +186,14 @@ export default function FrotaPage() {
           console.error('❌ Erro ao buscar veículos:', response.statusText)
           console.log('🔄 Usando dados locais como fallback...')
           // Fallback para dados locais em caso de erro
-          setVehicles(localVehicles)
-          setFilteredVehicles(localVehicles)
+          setVehicles(localVehicles as any)
+          setFilteredVehicles(localVehicles as any)
         }
       } catch (error) {
         console.error('Erro ao buscar veículos:', error)
         // Fallback para dados locais em caso de erro
-        setVehicles(localVehicles)
-        setFilteredVehicles(localVehicles)
+        setVehicles(localVehicles as any)
+        setFilteredVehicles(localVehicles as any)
       } finally {
         setLoading(false)
       }
