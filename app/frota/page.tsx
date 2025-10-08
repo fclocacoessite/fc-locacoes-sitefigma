@@ -353,7 +353,7 @@ export default function FrotaPage() {
                     className="w-full h-full object-cover cursor-pointer"
                     loading="lazy"
                     decoding="async"
-                    fetchpriority="low"
+                    fetchPriority="low"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     width={800}
                     height={384}
@@ -597,7 +597,7 @@ export default function FrotaPage() {
                 alt={`${selectedVehicle.brand} ${selectedVehicle.model} - Imagem ${currentImageIndex + 1}`}
                 className="w-full h-96 object-contain rounded"
                 decoding="async"
-                fetchpriority="low"
+                fetchPriority="low"
                 sizes="(max-width: 1024px) 100vw, 1024px"
                 onError={(e) => {
                   console.error('Erro ao carregar imagem no modal:', selectedVehicle.photos[currentImageIndex])
