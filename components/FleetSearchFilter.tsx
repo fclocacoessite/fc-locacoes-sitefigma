@@ -30,20 +30,20 @@ export function FleetSearchFilter({ vehicles, onFilteredVehicles, onSearchTerm }
 
   // Extrair categorias únicas dos veículos
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(vehicles.map(v => v.category))]
+    const uniqueCategories = Array.from(new Set(vehicles.map(v => v.category)))
     return uniqueCategories.sort()
   }, [vehicles])
 
   // Extrair status únicos dos veículos
   const statusOptions = useMemo(() => {
-    const uniqueStatus = [...new Set(vehicles.map(v => v.status))]
+    const uniqueStatus = Array.from(new Set(vehicles.map(v => v.status)))
     return uniqueStatus.sort()
   }, [vehicles])
 
   // Extrair features únicas dos veículos
   const allFeatures = useMemo(() => {
     const features = vehicles.flatMap(v => v.features || [])
-    const uniqueFeatures = [...new Set(features)]
+    const uniqueFeatures = Array.from(new Set(features))
     return uniqueFeatures.sort()
   }, [vehicles])
 
