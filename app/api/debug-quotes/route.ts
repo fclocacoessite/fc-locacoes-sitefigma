@@ -3,7 +3,10 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const diagnostics = {
+    const diagnostics: {
+      timestamp: string
+      tests: Record<string, any>
+    } = {
       timestamp: new Date().toISOString(),
       tests: {}
     }
