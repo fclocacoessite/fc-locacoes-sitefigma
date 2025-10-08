@@ -119,7 +119,7 @@ export function ConsignmentFormSimple() {
 
     // Validar campos obrigatórios
     const requiredFields = ['ownerName', 'email', 'phone', 'brand', 'model', 'year', 'category', 'condition', 'dailyRate']
-    const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '')
+    const missingFields = requiredFields.filter(field => !data[field] || (typeof data[field] === 'string' && data[field].trim() === ''))
     
     if (missingFields.length > 0) {
       toast.error(`Campos obrigatórios não preenchidos: ${missingFields.join(', ')}`)
