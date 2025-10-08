@@ -61,7 +61,7 @@ export default function SignInPage() {
 
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: any) => {
         if (event === 'SIGNED_IN' && session) {
           const userRole = session.user.user_metadata?.role || 'client'
           console.log('🔍 Login detectado:', { userRole, email: session.user.email })
