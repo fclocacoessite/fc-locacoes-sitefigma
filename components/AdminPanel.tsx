@@ -18,7 +18,11 @@ import {
   TrendingUp,
   AlertTriangle,
   DollarSign,
-  Calendar
+  Calendar,
+  Users,
+  Search,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { SiteSettings } from './SiteSettings';
 
