@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
       created_at: user.created_at,
       last_sign_in_at: user.last_sign_in_at,
       email_confirmed_at: user.email_confirmed_at,
-      is_active: !user.banned_until,
-      is_banned: !!user.banned_until,
+      is_active: !!user.email_confirmed_at,
+      is_banned: false,
       avatar_url: user.user_metadata?.avatar_url || null,
       provider: user.app_metadata?.provider || 'email'
     })).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
