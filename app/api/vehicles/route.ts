@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Otimizar dados para o site público (apenas campos essenciais)
-    const optimizedVehicles = adminView ? vehicles : vehicles?.map(vehicle => ({
+    const optimizedVehicles = adminView ? vehicles : vehicles?.map((vehicle: any) => ({
       ...vehicle,
       // Garantir que photos seja um array (todas as fotos para a página da frota)
       photos: Array.isArray(vehicle.photos) ? vehicle.photos : [],
