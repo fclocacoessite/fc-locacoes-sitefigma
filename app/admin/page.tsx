@@ -457,7 +457,7 @@ export default function AdminPage() {
       carroceria_aberta: vehicle.carroceria_aberta ?? false,
       banheiro: vehicle.banheiro ?? false,
       documents: vehicle.documents?.join(', ') || '',
-      status: mapStatusToFrontend(vehicle.status),
+      status: mapStatusToFrontend(vehicle.status ?? null),
       featured: vehicle.featured ?? false
     })
     
